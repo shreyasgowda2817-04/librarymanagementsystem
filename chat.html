@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Help Center</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{background:#f8fafc;color:#333;}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  color:white;
+  padding:60px 20px;
+  text-align:center;
+}
+.hero h1{font-size:36px;margin-bottom:10px;}
+.hero input{
+  margin-top:20px;
+  width:50%;
+  padding:12px;
+  border:none;
+  border-radius:25px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:1100px;
+  margin:40px auto;
+  padding:20px;
+}
+
+/* CATEGORIES */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  transition:0.2s;
+  cursor:pointer;
+}
+.card:hover{transform:translateY(-5px);}
+
+.card h3{margin-bottom:10px;color:#4f46e5;}
+
+/* FAQ */
+.faq{
+  margin-top:40px;
+}
+.faq h2{margin-bottom:15px;}
+
+.faq-item{
+  background:white;
+  margin-bottom:10px;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 3px 10px rgba(0,0,0,0.05);
+}
+
+.faq-question{
+  padding:15px;
+  cursor:pointer;
+  font-weight:500;
+}
+
+.faq-answer{
+  padding:15px;
+  display:none;
+  border-top:1px solid #eee;
+  font-size:14px;
+}
+
+/* CONTACT */
+.contact{
+  margin-top:40px;
+  text-align:center;
+}
+.contact a{
+  display:inline-block;
+  margin-top:10px;
+  padding:10px 20px;
+  background:#4f46e5;
+  color:white;
+  border-radius:6px;
+  text-decoration:none;
+}
+
+/* FOOTER */
+.footer{
+  text-align:center;
+  padding:20px;
+  color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Help Center</h1>
+  <p>Find answers and support</p>
+  <input placeholder="Search for help...">
+</div>
+
+<div class="container">
+
+  <!-- CATEGORIES -->
+  <div class="grid">
+    <div class="card">
+      <h3>🔐 Account</h3>
+      <p>Login, signup, password issues</p>
+    </div>
+
+    <div class="card">
+      <h3>📚 Courses</h3>
+      <p>Access courses and learning</p>
+    </div>
+
+    <div class="card">
+      <h3>💳 Payments</h3>
+      <p>Billing and transactions</p>
+    </div>
+
+    <div class="card">
+      <h3>📄 Certificates</h3>
+      <p>Download certificates</p>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggle(this)">How to login?</div>
+      <div class="faq-answer">Go to login page and enter your email and password.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggle(this)">How to access courses?</div>
+      <div class="faq-answer">Login → Dashboard → My Courses.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggle(this)">Payment failed?</div>
+      <div class="faq-answer">Retry payment or contact support.</div>
+    </div>
+
+  </div>
+
+  <!-- CONTACT -->
+  <div class="contact">
+    <h2>Still need help?</h2>
+    <p>Contact our support team</p>
+ <a href="mailto:shreyasgowda2817.com?subject=LMS Support&body=Hello, I need help with...">
+  Contact Support
+</a>
+  </div>
+
+</div>
+
+<div class="footer">
+  © 2026 Your LMS
+</div>
+
+<script>
+function toggle(el){
+  let ans = el.nextElementSibling;
+  ans.style.display = ans.style.display==="block"?"none":"block";
+}
+</script>
+
+</body>
+</html>
