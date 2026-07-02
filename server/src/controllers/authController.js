@@ -143,16 +143,21 @@ export const register = async (req, res, next) => {
       emailVerificationOTP: hashedOTP,
       emailVerificationOTPExpire: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
       lastOTPSentAt: Date.now(),
-      otpAttempts: 0
+      otpAttempts: 0,
+      isVerified: process.env.SKIP_EMAIL_VERIFY === "true" // Auto-verify if emails are skipped
     });
 
-    // Send Verification Email with OTP
-    await sendOTPEmail(user.email, user.name, otp, "Verification");
-
-    res.status(201).json({
-      message: "Registration successful. Please enter the OTP sent to your email."
-    });
-
+    // Send Verification Email with OTP if not skipping
+    if (process.env.SKIP_EMAIL_VERIFY !== "true") {
+      await sendOTPEmail(user.email, user.name, otp, "Verification");
+      res.status(201).json({
+        message: "Registration successful. Please enter the OTP sent to your email."
+      });
+    } else {
+      res.status(201).json({
+        message: "Registration successful. You can now log in."
+      });
+    }
 
   } catch (err) {
     next(err);
