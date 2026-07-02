@@ -147,6 +147,12 @@ export const register = async (req, res, next) => {
       isVerified: process.env.SKIP_EMAIL_VERIFY === "true" // Auto-verify if emails are skipped
     });
 
+    // Automatically add to the Members collection so they show up in the Admin Dashboard
+    await Member.create({
+      name: user.name,
+      email: user.email,
+    });
+
     // Send Verification Email with OTP if not skipping
     if (process.env.SKIP_EMAIL_VERIFY !== "true") {
       await sendOTPEmail(user.email, user.name, otp, "Verification");
