@@ -2,17 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies first (for caching)
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Copy the rest of the application
+# Copy the entire project
 COPY . .
 
-# Build the frontend
+# Install frontend dependencies and build
+RUN npm install
 RUN npm run build
 
-# Start the server (Assuming production script exists or we use node directly)
-CMD ["node", "server/src/server.js"]
+# Install backend dependencies
+WORKDIR /app/server
+RUN npm install
+
+# Start the backend server
+CMD ["node", "src/server.js"]
 
 EXPOSE 5001
