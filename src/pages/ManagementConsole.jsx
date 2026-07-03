@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { API_URL } from "../config";
 import {
   FaBook, FaUsers, FaTrash, FaPlus, FaClipboardList, FaCheck, FaTimes,
-  FaTools, FaDatabase, FaLayerGroup, FaHistory, FaShieldAlt, FaFileExport, FaCogs, FaPlay, FaPowerOff
+  FaTools, FaDatabase, FaLayerGroup, FaHistory, FaShieldAlt, FaFileExport, FaCogs, FaPlay, FaPowerOff, FaChartBar
 } from "react-icons/fa";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,15 +22,17 @@ export default function ManagementConsole() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState("assets");
   const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState([]);
 
   const fetchData = async () => {
     try {
       const headers = { Authorization: `Bearer ${user?.token}` };
-      const [booksRes, membersRes, requestsRes, usersRes] = await Promise.all([
+      const [booksRes, membersRes, requestsRes, usersRes, analyticsRes] = await Promise.all([
         fetch(`${API_URL}/api/books`, { headers, credentials: 'include' }),
         fetch(`${API_URL}/api/members`, { headers, credentials: 'include' }),
         fetch(`${API_URL}/api/book-requests/all`, { headers, credentials: 'include' }),
-        fetch(`${API_URL}/api/auth/users`, { headers, credentials: 'include' })
+        fetch(`${API_URL}/api/auth/users`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/transactions/analytics/monthly-reads`, { headers, credentials: 'include' })
       ]);
       if (booksRes.status === 401 || membersRes.status === 401) {
         throw new Error("401 Unauthorized");
@@ -39,11 +42,13 @@ export default function ManagementConsole() {
       const membersData = await membersRes.json();
       const requestsData = await requestsRes.json();
       const usersData = await usersRes.json();
+      const analyticsDataRes = await analyticsRes.json();
       
       setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
       setMembers(Array.isArray(membersData) ? membersData : []);
       setBookRequests(Array.isArray(requestsData) ? requestsData : []);
       setUsers(Array.isArray(usersData) ? usersData : []);
+      setAnalyticsData(Array.isArray(analyticsDataRes) ? analyticsDataRes : []);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -325,7 +330,8 @@ export default function ManagementConsole() {
             { id: "identities", label: "Manage Members", icon: <FaUsers /> },
             { id: "procurement", label: "Book Requests", icon: <FaClipboardList /> },
             { id: "users", label: "Platform Users", icon: <FaShieldAlt /> },
-            { id: "automation", label: "Automation", icon: <FaCogs /> }
+            { id: "automation", label: "Automation", icon: <FaCogs /> },
+            { id: "analytics", label: "Analytics", icon: <FaChartBar /> }
 
           ].map(tab => (
             <button
@@ -345,6 +351,28 @@ export default function ManagementConsole() {
         </div>
 
         <AnimatePresence mode="wait">
+
+          {activeTab === "analytics" && (
+            <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white dark:bg-slate-900 p-10 rounded-xl shadow-md border border-slate-200 dark:border-slate-800">
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-8 flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-indigo-500">
+                  <FaChartBar />
+                </div>
+                Monthly Reads Analytics
+              </h2>
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analyticsData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                    <XAxis dataKey="month" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                    <Bar dataKey="booksRead" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+          )}
 
           {activeTab === "assets" && (
             <motion.div key="assets" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="grid lg:grid-cols-3 gap-12">
