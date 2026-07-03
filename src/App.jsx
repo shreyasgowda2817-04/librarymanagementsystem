@@ -78,6 +78,12 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Proactive Backend Wakeup (Counter Cold-Starts)
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/cron/trigger`)
+      .catch(() => {}); // Fire and forget
+  }, []);
+
   useEffect(() => {
     if (user && user.token) {
       try {
