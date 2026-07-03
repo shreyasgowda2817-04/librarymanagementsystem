@@ -5,22 +5,14 @@ import {
   createBook,
   updateBook,
   deleteBook,
-  readPdf
+  readPdf,
+  getMedia
 } from "../controllers/bookController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import multer from "multer";
 import path from "path";
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const router = express.Router();
@@ -36,5 +28,7 @@ router.route("/read/:id").get(protect, readPdf);
 router.route("/:id")
   .put(protect, upload.fields([{ name: "pdf", maxCount: 1 }, { name: "cover", maxCount: 1 }]), updateBook)
   .delete(protect, deleteBook);
+
+router.route("/media/:id").get(getMedia);
 
 export default router;

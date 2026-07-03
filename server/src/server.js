@@ -1,6 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
+import logger from "./utils/logger.js";
 // Triggering server restart for AI sync... 17405786842521740578684252
 
 import cors from "cors";
@@ -40,7 +41,7 @@ import connectorRoutes from "./routes/connectorRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import acquisitionsRoutes from "./routes/acquisitionsRoutes.js";
-import { startCronJobs } from "./utils/cronJobs.js";
+import cronRoutes from "./routes/cronRoutes.js";
 import { maintenanceMode } from "./middleware/maintenanceMiddleware.js";
 
 const app = express();
@@ -70,9 +71,9 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 
-// Global Request Logger
+// Global Request Logger using Winston
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  logger.info(`Incoming Request`, { method: req.method, path: req.path, ip: req.ip });
   next();
 });
 
@@ -125,8 +126,7 @@ app.use("/api/connectors", connectorRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/acquisitions", acquisitionsRoutes);
-// Start Automated Enterprise Cron Jobs
-startCronJobs();
+app.use("/api/cron", cronRoutes);
 
 // Production Setup: Serve Frontend
 
@@ -145,5 +145,5 @@ const server = http.createServer(app);
 initSocket(server);
 
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Backend running on http://127.0.0.1:${PORT}`);
+  logger.info(`✅ Backend running on http://127.0.0.1:${PORT}`);
 });

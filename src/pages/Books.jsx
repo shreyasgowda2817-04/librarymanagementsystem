@@ -50,7 +50,7 @@ export default function Books() {
 
       .then(res => res.json())
       .then(data => {
-        setBooksData(Array.isArray(data) ? data : []);
+        setBooksData(Array.isArray(data) ? data : (data.books || []));
         setLoading(false);
       })
       .catch(err => {

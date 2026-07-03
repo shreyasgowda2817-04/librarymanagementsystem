@@ -12,12 +12,24 @@ const txSchema = new mongoose.Schema(
     returned: { type: Boolean, default: false },
     returnedOn: { type: String, default: null },
 
-    penalty: { type: Number, default: 0 },
+    penalty: { type: Number, default: 0 }, // Legacy: use fineAmount
+    fineAmount: { type: Number, default: 0 },
     finePaid: { type: Boolean, default: false },
-    isLost: { type: Boolean, default: false }
+    isLost: { type: Boolean, default: false },
+    statusHistory: [
+      {
+        status: { type: String, enum: ["Issued", "Returned", "Lost", "Overdue"] },
+        date: { type: Date, default: Date.now },
+        note: { type: String }
+      }
+    ]
   },
   { timestamps: true }
 );
+
+txSchema.index({ memberId: 1, returned: 1 });
+txSchema.index({ bookId: 1, returned: 1 });
+txSchema.index({ dueDate: 1 });
 
 txSchema.set("toJSON", {
   virtuals: true,

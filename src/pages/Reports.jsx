@@ -75,9 +75,9 @@ export default function Reports() {
       const paymentsData = await paymentsRes.json();
       const statsData = await statsRes.json();
 
-      setBooks(Array.isArray(booksData) ? booksData : []);
+      setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
       setMembers(Array.isArray(membersData) ? membersData : []);
-      setTransactions(Array.isArray(txData) ? txData : []);
+      setTransactions(Array.isArray(txData) ? txData : (txData.transactions || []));
       setPayments(Array.isArray(paymentsData) ? paymentsData : []);
       setFinancialStats(statsData || { totalRevenue: 0, last30DaysRevenue: 0, chartData: [] });
       

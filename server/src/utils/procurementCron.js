@@ -1,13 +1,9 @@
-import cron from "node-cron";
 import Book from "../models/book.js";
 import Vendor from "../models/Vendor.js";
 import PurchaseOrder from "../models/PurchaseOrder.js";
 
-// Run every 10 minutes for testing/demo purposes.
-// In a real enterprise, this might be "0 0 * * *" (daily at midnight).
-export const initProcurementCron = () => {
-  cron.schedule("*/10 * * * *", async () => {
-    console.log("[CRON] Running automated inventory replenishment check...");
+export const runProcurementCheck = async () => {
+  console.log("[CRON] Running automated inventory replenishment check...");
     try {
       const lowStockBooks = await Book.find({
         $expr: { $lt: ["$stock", "$reorderThreshold"] }
@@ -79,9 +75,7 @@ export const initProcurementCron = () => {
         console.log(`[CRON] Created Draft/Approved PO for vendor ${vendor.name} with ${items.length} items.`);
       }
 
-    } catch (err) {
-      console.error("[CRON] Error during inventory replenishment:", err);
-    }
-  });
-  console.log("[CRON] Procurement automation initialized.");
+  } catch (err) {
+    console.error("[CRON] Error during inventory replenishment:", err);
+  }
 };

@@ -40,7 +40,7 @@ export default function ManagementConsole() {
       const requestsData = await requestsRes.json();
       const usersData = await usersRes.json();
       
-      setBooks(Array.isArray(booksData) ? booksData : []);
+      setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
       setMembers(Array.isArray(membersData) ? membersData : []);
       setBookRequests(Array.isArray(requestsData) ? requestsData : []);
       setUsers(Array.isArray(usersData) ? usersData : []);
@@ -376,16 +376,16 @@ export default function ManagementConsole() {
                       </div>
                     </div>
                     <div className="space-y-4 pt-4">
-                      <div className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
+                      <label className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
                         <FaPlus className="text-slate-400" />
                         <span className="text-sm font-semibold text-slate-500">Upload PDF Copy</span>
                         <input type="file" accept="application/pdf" className="hidden" onChange={e => setBookForm({ ...bookForm, pdf: e.target.files[0] })} />
-                      </div>
-                      <div className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
+                      </label>
+                      <label className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
                         <FaPlus className="text-slate-400" />
                         <span className="text-sm font-semibold text-slate-500">Upload Book Cover</span>
                         <input type="file" accept="image/*" className="hidden" onChange={e => setBookForm({ ...bookForm, cover: e.target.files[0] })} />
-                      </div>
+                      </label>
                     </div>
                     <div className="pt-8 flex gap-4">
                       <button type="submit" className="flex-1 py-5 bg-indigo-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-md shadow-indigo-500/30 hover:bg-indigo-700 active:scale-95 transition-all">

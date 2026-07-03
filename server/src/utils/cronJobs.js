@@ -1,4 +1,3 @@
-import cron from "node-cron";
 import mongoose from "mongoose";
 import os from "os";
 import Transaction from "../models/transaction.js";
@@ -6,7 +5,7 @@ import Notification from "../models/notification.js";
 import User from "../models/user.js";
 import BookRequest from "../models/BookRequest.js";
 import sendEmail, { sendSMS, emailTemplates } from "../services/emailService.js";
-import { initProcurementCron } from "./procurementCron.js";
+import { runProcurementCheck } from "./procurementCron.js";
 
 // Enterprise Job Configuration State
 export const jobConfigs = {
@@ -83,8 +82,20 @@ export const scanOverdueBooks = async () => {
           const DAILY_FINE = 10;
           const calculatedPenalty = diffDays * DAILY_FINE;
           
-          if (tx.penalty !== calculatedPenalty) {
+          if (tx.fineAmount !== calculatedPenalty || tx.penalty !== calculatedPenalty) {
             tx.penalty = calculatedPenalty;
+            tx.fineAmount = calculatedPenalty;
+            
+            const isAlreadyOverdue = tx.statusHistory?.some(h => h.status === "Overdue");
+            if (!isAlreadyOverdue) {
+              if(!tx.statusHistory) tx.statusHistory = [];
+              tx.statusHistory.push({
+                status: "Overdue",
+                date: new Date(),
+                note: `Automatically marked as overdue. Fine: ₹${calculatedPenalty}`
+              });
+            }
+
             await tx.save();
 
             // Dispatch Email and SMS Reminders to Member
@@ -313,32 +324,4 @@ export const scanExpiredMemberships = async () => {
   }
 };
 
-export const startCronJobs = () => {
-  // Overdue Task
-  cron.schedule(jobConfigs.overdue.schedule, async () => {
-    if (jobConfigs.overdue.enabled) await scanOverdueBooks();
-  });
 
-  // Pre-Due Task
-  cron.schedule(jobConfigs.dueTomorrow.schedule, async () => {
-    if (jobConfigs.dueTomorrow.enabled) await scanDueTomorrowBooks();
-  });
-
-  // Requests Task
-  cron.schedule(jobConfigs.requests.schedule, async () => {
-    if (jobConfigs.requests.enabled) await cleanupAbandonedRequests();
-  });
-
-  // Health Check Task
-  cron.schedule(jobConfigs.health.schedule, async () => {
-    if (jobConfigs.health.enabled) await systemHealthCheck();
-  });
-
-  // Membership Expiry Task
-  cron.schedule(jobConfigs.membershipExpiry.schedule, async () => {
-    if (jobConfigs.membershipExpiry.enabled) await scanExpiredMemberships();
-  });
-
-  // Automated Procurement Task
-  initProcurementCron();
-};

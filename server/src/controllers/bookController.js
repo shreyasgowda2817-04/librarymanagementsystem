@@ -1,16 +1,47 @@
 // server/src/controllers/bookController.js
 import Book from "../models/book.js";
 import Transaction from "../models/transaction.js";
-import path from "path";
-import { fileURLToPath } from "url";
+import mongoose from "mongoose";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const uploadToGridFS = async (buffer, filename, mimetype) => {
+  return new Promise((resolve, reject) => {
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "media"
+    });
+    
+    const uploadStream = bucket.openUploadStream(filename, {
+      contentType: mimetype
+    });
+    
+    uploadStream.end(buffer);
+    
+    uploadStream.on('finish', () => resolve(uploadStream.id));
+    uploadStream.on('error', reject);
+  });
+};
 
 export const getBooks = async (req, res, next) => {
   try {
-    const books = await Book.find({}).sort({ createdAt: -1 });
-    res.json(books);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const books = await Book.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+      
+    const total = await Book.countDocuments();
+
+    res.json({
+      books,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -22,11 +53,14 @@ export const createBook = async (req, res, next) => {
     let pdfUrl = "";
     let coverUrl = "";
     const backendUrl = process.env.BACKEND_URL || "http://localhost:5001";
+    
     if (req.files?.pdf) {
-      pdfUrl = `${backendUrl}/uploads/${req.files.pdf[0].filename}`;
+      const fileId = await uploadToGridFS(req.files.pdf[0].buffer, req.files.pdf[0].originalname, req.files.pdf[0].mimetype);
+      pdfUrl = `${backendUrl}/api/books/media/${fileId}`;
     }
     if (req.files?.cover) {
-      coverUrl = `${backendUrl}/uploads/${req.files.cover[0].filename}`;
+      const fileId = await uploadToGridFS(req.files.cover[0].buffer, req.files.cover[0].originalname, req.files.cover[0].mimetype);
+      coverUrl = `${backendUrl}/api/books/media/${fileId}`;
     }
 
     const book = await Book.create({
@@ -35,6 +69,8 @@ export const createBook = async (req, res, next) => {
       status: status || "Available",
       category: category || "Uncategorized",
       stock: stock ? Number(stock) : 1,
+      totalCopies: stock ? Number(stock) : 1,
+      availableCopies: stock ? Number(stock) : 1,
       barcode: barcode || "",
       pdfUrl,
       coverUrl
@@ -60,10 +96,18 @@ export const updateBook = async (req, res, next) => {
     const updateData = { ...req.body };
     const backendUrl = process.env.BACKEND_URL || "http://localhost:5001";
     if (req.files?.pdf) {
-      updateData.pdfUrl = `${backendUrl}/uploads/${req.files.pdf[0].filename}`;
+      const fileId = await uploadToGridFS(req.files.pdf[0].buffer, req.files.pdf[0].originalname, req.files.pdf[0].mimetype);
+      updateData.pdfUrl = `${backendUrl}/api/books/media/${fileId}`;
     }
     if (req.files?.cover) {
-      updateData.coverUrl = `${backendUrl}/uploads/${req.files.cover[0].filename}`;
+      const fileId = await uploadToGridFS(req.files.cover[0].buffer, req.files.cover[0].originalname, req.files.cover[0].mimetype);
+      updateData.coverUrl = `${backendUrl}/api/books/media/${fileId}`;
+    }
+
+    if (updateData.stock !== undefined) {
+      // Sync totalCopies and availableCopies if admin updates stock
+      updateData.totalCopies = Number(updateData.stock);
+      updateData.availableCopies = Number(updateData.stock);
     }
 
     const updated = await Book.findByIdAndUpdate(id, updateData, { new: true });
@@ -104,9 +148,7 @@ export const deleteBook = async (req, res, next) => {
 
 export const readPdf = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const book = await Book.findById(id);
-    
+    const book = await Book.findById(req.params.id);
     if (!book || !book.pdfUrl) {
       return res.status(404).json({ message: "PDF not found" });
     }
@@ -119,14 +161,31 @@ export const readPdf = async (req, res, next) => {
       });
     }
 
+    const fileIdStr = book.pdfUrl.split('/').pop();
+    const fileId = new mongoose.mongo.ObjectId(fileIdStr);
+    
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "media" });
+    const downloadStream = bucket.openDownloadStream(fileId);
+    res.set('Content-Type', 'application/pdf');
+    downloadStream.pipe(res);
+  } catch (err) {
+    next(err);
+  }
+};
 
-    const filename = book.pdfUrl.split("/uploads/")[1];
-    if (!filename) {
-      return res.status(404).json({ message: "Invalid PDF path" });
+export const getMedia = async (req, res, next) => {
+  try {
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: "media" });
+    const fileId = new mongoose.mongo.ObjectId(req.params.id);
+    const files = await bucket.find({ _id: fileId }).toArray();
+    
+    if (!files || files.length === 0) {
+      return res.status(404).json({ message: "Media not found" });
     }
-
-    const filePath = path.join(__dirname, "../../uploads", filename);
-    res.sendFile(filePath);
+    
+    res.set('Content-Type', files[0].contentType);
+    const downloadStream = bucket.openDownloadStream(fileId);
+    downloadStream.pipe(res);
   } catch (err) {
     next(err);
   }

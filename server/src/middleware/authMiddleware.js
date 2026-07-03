@@ -119,12 +119,12 @@ export const protect = async (req, res, next) => {
     }
 
     // Attach limits
-    if (user.role === "admin") {
+    if (["admin", "superadmin", "librarian"].includes(user.role)) {
       user.limits = {
         maxBooks: 999,
         digitalAccess: true,
         aiAnalysisAccess: true,
-        label: "System Administrator"
+        label: "Library Staff"
       };
     } else {
       user.limits = membershipLimits[user.membership || "Basic"];
@@ -140,9 +140,20 @@ export const protect = async (req, res, next) => {
 
 
 export const admin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  if (req.user && ["admin", "superadmin"].includes(req.user.role)) {
     next();
   } else {
-    res.status(401).json({ message: "Not authorized as an admin" });
+    res.status(403).json({ message: "Not authorized as an admin" });
   }
+};
+
+export const authorizeRole = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: `Role (${req.user?.role || 'none'}) is not allowed to access this resource` 
+      });
+    }
+    next();
+  };
 };

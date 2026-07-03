@@ -24,7 +24,7 @@ export default function StudentFines() {
       const { data } = await axios.get(`${API_URL}/api/transactions/my`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      setTransactions(data);
+      setTransactions(Array.isArray(data) ? data : (data.transactions || []));
       setDues(data.filter(tx => tx.currentPenalty > 0 && !tx.finePaid));
     } catch (err) {
       toast.error("Failed to load history.");

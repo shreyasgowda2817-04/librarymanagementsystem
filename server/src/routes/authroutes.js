@@ -1,5 +1,7 @@
 import express from "express";
-import { login, register, sendOTP, updateProfile, forgotPassword, resetPassword, verifyOTP, verify2FA, verifyEmail, getLeaderboard, toggleFavorite, getFavorites, getSessions, logoutSession, logoutAllSessions, updateSettings, exportUserData, generateApiKey, listApiKeys, revokeApiKey, googleCallback, getAllUsers, promoteToAdmin, demoteFromAdmin } from "../controllers/authController.js";
+import { login, register, sendOTP, updateProfile, forgotPassword, resetPassword, verifyOTP, verify2FA, verifyEmail, getLeaderboard, toggleFavorite, getFavorites, getSessions, logoutSession, logoutAllSessions, updateSettings, exportUserData, generateApiKey, listApiKeys, revokeApiKey, googleCallback, getAllUsers, promoteToAdmin, demoteFromAdmin, refreshToken } from "../controllers/authController.js";
+import { validate } from "../middleware/validate.js";
+import { registerSchema, loginSchema } from "../validators/authValidator.js";
 import Member from "../models/member.js";
 
 import passport from "passport";
@@ -12,7 +14,7 @@ import rateLimit from "express-rate-limit";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Increased for development
+  max: 20, // 20 requests per 15 minutes for auth endpoints
   message: { message: "Too many requests from this IP, please try again after 15 minutes" },
   standardHeaders: true,
   legacyHeaders: false,
@@ -20,7 +22,7 @@ const authLimiter = rateLimit({
 
 const otpLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 500, // Increased for development
+  max: 5, // 5 requests per 10 minutes for OTPs
   message: { message: "Too many OTP requests, please try again after 10 minutes" },
   standardHeaders: true,
   legacyHeaders: false,
@@ -41,9 +43,11 @@ const upload = multer({ storage: storage });
 
 const router = express.Router();
 
-router.post("/register", authLimiter, register);
+router.post("/refresh", authLimiter, refreshToken);
 
-router.post("/login", authLimiter, login);
+router.post("/register", authLimiter, validate(registerSchema), register);
+
+router.post("/login", authLimiter, validate(loginSchema), login);
 router.post("/send-otp", otpLimiter, sendOTP);
 router.post("/verify-2fa", otpLimiter, verify2FA);
 // Google OAuth

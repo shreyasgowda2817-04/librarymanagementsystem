@@ -1,5 +1,6 @@
 import User from "../models/user.js";
-import generateToken from "../utils/generateToken.js";
+import jwt from "jsonwebtoken";
+import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 import crypto from "crypto";
 import Member from "../models/member.js";
 import Transaction from "../models/transaction.js";
@@ -55,13 +56,22 @@ export const googleCallback = async (req, res) => {
     console.error("Failed to save google oauth session:", sessErr);
   }
 
-  const token = generateToken(req.user._id, sessionId);
+  const token = generateAccessToken(req.user._id, sessionId);
+  const refreshToken = generateRefreshToken(req.user._id, sessionId);
 
   // Set Secure Cookie
   res.cookie("token", token, {
     httpOnly: true,
     secure: false, // Compatibility for localhost
     sameSite: "lax",
+    maxAge: 15 * 60 * 1000 // 15 mins
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false, 
+    sameSite: "lax",
+    path: "/api/auth/refresh",
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 
@@ -231,13 +241,22 @@ export const login = async (req, res, next) => {
 
 
 
-    const token = generateToken(user._id, sessionId);
+    const token = generateAccessToken(user._id, sessionId);
+    const refreshToken = generateRefreshToken(user._id, sessionId);
 
     // Set Secure Cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: false, // Compatibility for localhost
       sameSite: "lax",
+      maxAge: 15 * 60 * 1000 // 15 mins
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "lax",
+      path: "/api/auth/refresh",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -692,13 +711,22 @@ export const verify2FA = async (req, res, next) => {
       lastActive: new Date()
     };
     user.sessions.push(session);
-    const token = generateToken(user._id);
+    const token = generateAccessToken(user._id, sessionId);
+    const refreshToken = generateRefreshToken(user._id, sessionId);
 
     // Set Secure Cookie
     res.cookie("token", token, {
       httpOnly: true,
       secure: false, // Compatibility for localhost
       sameSite: "lax",
+      maxAge: 15 * 60 * 1000 // 15 mins
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "lax",
+      path: "/api/auth/refresh",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -770,5 +798,31 @@ export const demoteFromAdmin = async (req, res, next) => {
 
     res.json({ message: `${user.name} has been reverted to a standard user account.` });
   } catch (err) { next(err); }
+};
+
+export const refreshToken = async (req, res, next) => {
+  try {
+    const rfToken = req.cookies.refreshToken;
+    if (!rfToken) return res.status(401).json({ message: "No refresh token provided" });
+
+    const decoded = jwt.verify(rfToken, process.env.JWT_REFRESH_SECRET || "default_refresh_secret");
+    
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    if (decoded.sessionId) {
+      const session = user.sessions.find(s => s.sessionId === decoded.sessionId);
+      if (!session) return res.status(401).json({ message: "Session expired or invalid" });
+    }
+
+    const newAccessToken = generateAccessToken(user._id, decoded.sessionId);
+    
+    // Optional: Also rotate refresh token here
+    
+    res.json({ token: newAccessToken });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") return res.status(401).json({ message: "Refresh token expired" });
+    return res.status(401).json({ message: "Invalid refresh token" });
+  }
 };
 

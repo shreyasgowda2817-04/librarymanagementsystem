@@ -6,6 +6,7 @@ import Reservation from "../models/Reservation.js";
 import Notification from "../models/notification.js";
 import User from "../models/user.js";
 import Payment from "../models/payment.js";
+import AuditLog from "../models/auditLog.js";
 import { awardPoints } from "../utils/gamification.js";
 import sendEmail, { emailTemplates, sendSMS } from "../services/emailService.js";
 import { membershipLimits } from "../config/membershipLimits.js";
@@ -50,10 +51,18 @@ const penaltyPerDay = Number(process.env.PENALTY_PER_DAY || 5);
 // GET /api/transactions
 export const getTransactions = async (req, res, next) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     const txs = await Transaction.find({})
       .populate("bookId", "title author status")
       .populate("memberId", "name email phone")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Transaction.countDocuments();
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
@@ -72,7 +81,15 @@ export const getTransactions = async (req, res, next) => {
       return { ...tx.toJSON(), currentPenalty };
     });
 
-    res.json(processedTxs);
+    res.json({
+      transactions: processedTxs,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -122,10 +139,13 @@ export const issueBook = async (req, res, next) => {
       }
     }
 
-    const activeTxsCount = await Transaction.countDocuments({ bookId, returned: false });
-    const stock = book.stock || 1;
+    const updatedBook = await Book.findOneAndUpdate(
+      { _id: bookId, availableCopies: { $gt: 0 } },
+      { $inc: { availableCopies: -1 } },
+      { new: true }
+    );
 
-    if (activeTxsCount >= stock) {
+    if (!updatedBook) {
       return res.status(400).json({ message: "All copies of this book are currently issued" });
     }
 
@@ -141,9 +161,19 @@ export const issueBook = async (req, res, next) => {
     });
 
     // mark book issued only if all copies are now taken
-    if (activeTxsCount + 1 >= stock) {
-      book.status = "Issued";
-      await book.save();
+    if (updatedBook.availableCopies === 0 && updatedBook.status !== "Issued") {
+      updatedBook.status = "Issued";
+      await updatedBook.save();
+    }
+
+    if (req.user && req.user.role === "admin") {
+      await AuditLog.create({
+        adminId: req.user._id,
+        adminName: req.user.name,
+        action: "ISSUE_BOOK",
+        target: `Transaction ID: ${tx._id}`,
+        details: `Issued "${book.title}" to member ${member.email}`
+      });
     }
 
     // Award points and notify user for borrowing
@@ -222,14 +252,26 @@ export const returnBook = async (req, res, next) => {
     if (penalty === 0) {
       tx.finePaid = true;
     }
-
     await tx.save();
 
-    // mark book available again
-    const book = await Book.findById(tx.bookId);
-    if (book && book.status === "Issued") {
-      book.status = "Available";
-      await book.save();
+    // mark book available again atomically
+    const book = await Book.findByIdAndUpdate(
+      tx.bookId,
+      { 
+        $inc: { availableCopies: 1 },
+        $set: { status: "Available" }
+      },
+      { new: true }
+    );
+
+    if (req.user && req.user.role === "admin") {
+      await AuditLog.create({
+        adminId: req.user._id,
+        adminName: req.user.name,
+        action: "RETURN_BOOK",
+        target: `Transaction ID: ${tx._id}`,
+        details: `Returned book "${book?.title}". Penalty applied: ₹${penalty}`
+      });
     }
 
     // NEW: Notify the FIRST user in the waitlist
@@ -308,12 +350,33 @@ export const markAsLost = async (req, res, next) => {
     tx.isLost = true;
     tx.returnedOn = todayStr;
     tx.penalty = penalty;
+    tx.fineAmount = penalty; // NEW: keep fineAmount in sync
     tx.finePaid = false; 
+
+    if (!tx.statusHistory) tx.statusHistory = [];
+    tx.statusHistory.push({
+      status: "Lost",
+      date: new Date(),
+      note: `Book marked as lost. Replacement cost added. Total fine: ₹${penalty}`
+    });
 
     await tx.save();
 
     book.status = "Lost";
+    // Also decrement available copies if not already done, but status="Lost" takes precedence
+    book.availableCopies = Math.max(0, book.availableCopies - 1);
+    book.totalCopies = Math.max(0, book.totalCopies - 1);
     await book.save();
+
+    if (req.user && req.user.role === "admin") {
+      await AuditLog.create({
+        adminId: req.user._id,
+        adminName: req.user.name,
+        action: "MARK_LOST",
+        target: `Transaction ID: ${tx._id}`,
+        details: `Marked "${book?.title}" as Lost. Replacement fee charged: ₹${penalty}`
+      });
+    }
 
     res.json(tx);
   } catch (err) {
@@ -467,13 +530,27 @@ export const getTelemetry = async (req, res, next) => {
       });
     }
 
-    const txs = await Transaction.find({
-      issueDate: { $gte: last7Days[0].date }
-    });
+    const startDate = last7Days[0].date;
 
-    txs.forEach(tx => {
-      const dayData = last7Days.find(d => d.date === tx.issueDate);
-      if (dayData) dayData.count++;
+    // Use MongoDB Aggregation pipeline for performance
+    const aggregationResult = await Transaction.aggregate([
+      {
+        $match: { issueDate: { $gte: startDate } }
+      },
+      {
+        $group: {
+          _id: "$issueDate",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Merge aggregation results with the zero-filled last7Days array
+    aggregationResult.forEach(item => {
+      const dayData = last7Days.find(d => d.date === item._id);
+      if (dayData) {
+        dayData.count = item.count;
+      }
     });
 
     const formattedData = last7Days.map(d => ({

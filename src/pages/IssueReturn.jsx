@@ -61,9 +61,9 @@ export default function IssueReturn() {
       const txData = await txRes.json();
       const resData = await resRes.json();
 
-      setBooks(Array.isArray(booksData) ? booksData : []);
+      setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
       setMembers(Array.isArray(membersData) ? membersData : []);
-      setTransactions(Array.isArray(txData) ? txData : []);
+      setTransactions(Array.isArray(txData) ? txData : (txData.transactions || []));
       setReservations(Array.isArray(resData) ? resData : []);
       setLoading(false);
     } catch (err) {

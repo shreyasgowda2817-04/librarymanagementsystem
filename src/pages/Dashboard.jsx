@@ -333,9 +333,15 @@ export default function Dashboard() {
         })),
       ]);
 
-      if (booksRes.ok) setBooks(await booksRes.json());
+      if (booksRes.ok) {
+        const booksData = await booksRes.json();
+        setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
+      }
       if (membersRes.ok) setMembers(await membersRes.json());
-      if (txRes.ok) setTransactions(await txRes.json());
+      if (txRes.ok) {
+        const txData = await txRes.json();
+        setTransactions(Array.isArray(txData) ? txData : (txData.transactions || []));
+      }
       if (meRes.ok) {
         const data = await meRes.json();
         setUserData(data);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_URL } from "../config";
 import {
@@ -398,7 +398,14 @@ export default function Layout({ children }) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              {children}
+              <Suspense fallback={
+                <div className="flex flex-col flex-1 items-center justify-center min-h-[50vh] text-slate-400">
+                  <div className="animate-spin h-8 w-8 border-4 border-indigo-500/20 border-t-indigo-600 rounded-full mb-4"></div>
+                  <p className="text-sm font-semibold tracking-tight">Loading module...</p>
+                </div>
+              }>
+                {children}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
           <Footer isAdmin={isAdmin} />
