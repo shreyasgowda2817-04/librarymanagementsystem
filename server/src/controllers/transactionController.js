@@ -568,3 +568,27 @@ export const getTelemetry = async (req, res, next) => {
     next(err);
   }
 };
+
+// GET /api/transactions/analytics/monthly-reads
+export const getMonthlyReads = async (req, res, next) => {
+  try {
+    const aggregationResult = await Transaction.aggregate([
+      {
+        $group: {
+          _id: { $substr: ["$issueDate", 0, 7] }, // Extract YYYY-MM
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const formattedData = aggregationResult.map(item => ({
+      month: item._id,
+      booksRead: item.count
+    }));
+
+    res.json(formattedData);
+  } catch (err) {
+    next(err);
+  }
+};

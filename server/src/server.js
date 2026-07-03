@@ -43,6 +43,7 @@ import workspaceRoutes from "./routes/workspaceRoutes.js";
 import acquisitionsRoutes from "./routes/acquisitionsRoutes.js";
 import cronRoutes from "./routes/cronRoutes.js";
 import { maintenanceMode } from "./middleware/maintenanceMiddleware.js";
+import { initScheduler } from "./scheduler.js";
 
 const app = express();
 
@@ -156,6 +157,9 @@ const server = http.createServer(app);
 
 // Initialize Socket.io
 initSocket(server);
+
+// Initialize Automated Background Jobs (Cron)
+initScheduler();
 
 server.listen(PORT, "0.0.0.0", () => {
   logger.info(`✅ Backend running on http://127.0.0.1:${PORT}`);

@@ -8,7 +8,8 @@ import {
   payFine,
   payAllFines,
   getTelemetry,
-  markAsLost
+  markAsLost,
+  getMonthlyReads
 } from "../controllers/transactionController.js";
 import { protect, admin } from "../middleware/authMiddleware.js";
 
@@ -22,6 +23,7 @@ router.patch("/:id/lost", protect, admin, markAsLost);
 router.patch("/pay-fine/:id", protect, payFine);
 router.patch("/pay-all-fines/:memberId", protect, admin, payAllFines);
 router.get("/telemetry", protect, admin, getTelemetry);
+router.get("/analytics/monthly-reads", protect, admin, getMonthlyReads);
 
 
 export default router;
