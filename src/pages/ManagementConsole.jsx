@@ -378,12 +378,16 @@ export default function ManagementConsole() {
                     <div className="space-y-4 pt-4">
                       <label className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
                         <FaPlus className="text-slate-400" />
-                        <span className="text-sm font-semibold text-slate-500">Upload PDF Copy</span>
+                        <span className="text-sm font-semibold text-slate-500 text-center truncate w-full px-2">
+                          {bookForm.pdf ? (typeof bookForm.pdf === 'string' ? 'PDF Attached' : bookForm.pdf.name) : 'Upload PDF Copy'}
+                        </span>
                         <input type="file" accept="application/pdf" className="hidden" onChange={e => setBookForm({ ...bookForm, pdf: e.target.files[0] })} />
                       </label>
                       <label className="p-4 bg-slate-50 dark:bg-[#0f172a] border border-dashed border-slate-200 dark:border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center gap-2 cursor-pointer hover:border-indigo-500 transition-all">
                         <FaPlus className="text-slate-400" />
-                        <span className="text-sm font-semibold text-slate-500">Upload Book Cover</span>
+                        <span className="text-sm font-semibold text-slate-500 text-center truncate w-full px-2">
+                          {bookForm.cover ? (typeof bookForm.cover === 'string' ? 'Cover Attached' : bookForm.cover.name) : 'Upload Book Cover'}
+                        </span>
                         <input type="file" accept="image/*" className="hidden" onChange={e => setBookForm({ ...bookForm, cover: e.target.files[0] })} />
                       </label>
                     </div>
