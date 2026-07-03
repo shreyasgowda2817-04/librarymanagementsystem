@@ -11,26 +11,28 @@ import {
 } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Books = lazy(() => import("./pages/Books"));
+import Dashboard from "./pages/Dashboard";
+import Books from "./pages/Books";
+import IssueReturn from "./pages/IssueReturn";
+import LandingPage from "./pages/LandingPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import StudentFines from "./pages/StudentFines";
+import ManagementConsole from "./pages/ManagementConsole";
+
+// Secondary Pages (Lazy Loaded)
 const Members = lazy(() => import("./pages/Members"));
-const IssueReturn = lazy(() => import("./pages/IssueReturn"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Membership = lazy(() => import("./pages/Membership"));
-const ManagementConsole = lazy(() => import("./pages/ManagementConsole"));
 const HardwareOps = lazy(() => import("./pages/HardwareOps"));
 const SystemSettings = lazy(() => import("./pages/SystemSettings"));
 const LibraryTools = lazy(() => import("./pages/LibraryTools"));
-const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 const Acquisitions = lazy(() => import("./pages/Acquisitions"));
-const StudentFines = lazy(() => import("./pages/StudentFines"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const StudyRooms = lazy(() => import("./pages/StudyRooms"));
 const SeatManagement = lazy(() => import("./pages/SeatManagement"));
 const KioskMode = lazy(() => import("./pages/KioskMode"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
