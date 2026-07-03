@@ -55,14 +55,19 @@ export const getTransactions = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const txs = await Transaction.find({})
+    const query = {};
+    if (req.user && ["librarian", "accountant"].includes(req.user.role) && req.user.branchId) {
+      query.branchId = req.user.branchId;
+    }
+
+    const txs = await Transaction.find(query)
       .populate("bookId", "title author status")
       .populate("memberId", "name email phone")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Transaction.countDocuments();
+    const total = await Transaction.countDocuments(query);
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);

@@ -26,12 +26,17 @@ export const getBooks = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const books = await Book.find({})
+    const query = {};
+    if (req.user && ["librarian", "accountant"].includes(req.user.role) && req.user.branchId) {
+      query.branchId = req.user.branchId;
+    }
+
+    const books = await Book.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
       
-    const total = await Book.countDocuments();
+    const total = await Book.countDocuments(query);
 
     res.json({
       books,

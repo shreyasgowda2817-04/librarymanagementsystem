@@ -5,6 +5,7 @@ const txSchema = new mongoose.Schema(
   {
     bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
     memberId: { type: mongoose.Schema.Types.ObjectId, ref: "Member", required: true },
+    branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", default: null },
 
     issueDate: { type: String, required: true }, // YYYY-MM-DD
     dueDate: { type: String, required: true },

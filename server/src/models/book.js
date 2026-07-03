@@ -18,6 +18,7 @@ const bookSchema = new mongoose.Schema(
     availableCopies: { type: Number, default: 1 },
     isbn: { type: String, sparse: true, unique: true },
     shelfLocation: { type: String },
+    embedding: { type: [Number], default: [] },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch" },
     barcode: { type: String },
     replacementCost: { type: Number, default: 500 },

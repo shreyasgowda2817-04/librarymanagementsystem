@@ -262,3 +262,45 @@ export const aiExplore = async (req, res) => {
     res.status(500).json({ error: "Failed to process semantic search.", details: error.message, stack: error.stack });
   }
 };
+
+export const semanticSearch = async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ message: "Query is required" });
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ message: "AI API key missing" });
+
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(query);
+    const embedding = result.embedding.values;
+
+    const books = await Book.aggregate([
+      {
+        $vectorSearch: {
+          index: "vector_index", // Requires an Atlas Vector Search index named 'vector_index'
+          path: "embedding",
+          queryVector: embedding,
+          numCandidates: 100,
+          limit: 10
+        }
+      },
+      {
+        $project: {
+          title: 1,
+          author: 1,
+          category: 1,
+          coverUrl: 1,
+          score: { $meta: "vectorSearchScore" }
+        }
+      }
+    ]);
+
+    res.json(books);
+  } catch (err) {
+    console.error("Semantic search error:", err);
+    res.status(500).json({ error: "Failed to perform semantic search" });
+  }
+};
