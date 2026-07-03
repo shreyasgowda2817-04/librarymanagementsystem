@@ -130,6 +130,17 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/acquisitions", acquisitionsRoutes);
 app.use("/api/cron", cronRoutes);
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error Handler Caught:", err.message);
+  console.error(err.stack);
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode).json({
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === "production" ? null : err.stack
+  });
+});
+
 // Production Setup: Serve Frontend
 
 if (process.env.NODE_ENV === "production") {
