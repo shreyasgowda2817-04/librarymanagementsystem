@@ -82,7 +82,7 @@ export default function App() {
 
   // Proactive Backend Wakeup (Counter Cold-Starts)
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/cron/trigger`)
+    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/ping`)
       .catch(() => {}); // Fire and forget
   }, []);
 

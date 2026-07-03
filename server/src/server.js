@@ -70,6 +70,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// FAST PING WAKEUP ROUTE (No DB, Instant 200 OK)
+app.get("/api/ping", (req, res) => res.status(200).json({ status: "alive" }));
 
 // Global Request Logger using Winston
 app.use((req, res, next) => {

@@ -5,6 +5,7 @@ import User from "../models/user.js";
 import Notification from "../models/notification.js";
 import Payment from "../models/payment.js";
 import Member from "../models/member.js";
+import Transaction from "../models/transaction.js";
 
 dotenv.config();
 
@@ -234,5 +235,86 @@ export const getFinancialStats = async (req, res, next) => {
     res.json({ totalRevenue, last30DaysRevenue, chartData });
   } catch (err) {
     next(err);
+  }
+};
+
+export const createFineOrder = async (req, res) => {
+  try {
+    const { amount, currency = "INR", transactionId } = req.body;
+    const isMock = !process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === "rzp_test_placeholder" || process.env.RAZORPAY_KEY_ID === "";
+
+    if (!isMock) {
+      const options = { amount: amount * 100, currency, receipt: `fine_${Date.now()}` };
+      const order = await razorpay.orders.create(options);
+      return res.status(200).json({ ...order, key_id: process.env.RAZORPAY_KEY_ID });
+    }
+
+    const mockOrder = {
+      id: `order_mock_fine_${Date.now()}`,
+      amount: amount * 100,
+      currency,
+      receipt: `fine_${Date.now()}`,
+      status: "created",
+      isMock: true,
+      key_id: "rzp_test_placeholder"
+    };
+    return res.status(200).json(mockOrder);
+  } catch (error) {
+    console.error("Create Fine Order Error:", error);
+    res.status(500).json({ error: "Failed to initialize fine payment." });
+  }
+};
+
+export const verifyFinePayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, isMock, transactionId, amount } = req.body;
+
+    if (isMock || razorpay_order_id?.startsWith("order_mock_")) {
+      if (transactionId) {
+        await Transaction.findByIdAndUpdate(transactionId, { finePaid: true });
+      }
+
+      await Payment.create({
+        userId: req.user._id,
+        orderId: razorpay_order_id,
+        paymentId: "SIMULATED_FINE_ID",
+        signature: "SIMULATED_SIG",
+        amount: amount || 0,
+        currency: "INR",
+        status: "captured",
+        planName: "Fine Payment"
+      });
+
+      return res.status(200).json({ success: true, message: "Fine Simulated & Paid Successfully" });
+    }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+                                    .update(body.toString())
+                                    .digest("hex");
+
+    if (expectedSignature === razorpay_signature) {
+      if (transactionId) {
+        await Transaction.findByIdAndUpdate(transactionId, { finePaid: true });
+      }
+
+      await Payment.create({
+        userId: req.user._id,
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+        amount: amount || 0,
+        currency: "INR",
+        status: "captured",
+        planName: "Fine Payment"
+      });
+
+      return res.status(200).json({ success: true, message: "Fine Paid Successfully" });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid signature" });
+    }
+  } catch (error) {
+    console.error("Verify Fine Payment Error:", error);
+    res.status(500).json({ error: "Fine Verification Failed" });
   }
 };
