@@ -1248,7 +1248,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
               {/* Navigation Sidebar */}
-              <div className="lg:col-span-3 space-y-2 sticky top-10">
+              <div className="lg:col-span-3 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-0 lg:space-y-2 sticky top-10 pb-4 lg:pb-0 scrollbar-hide -mx-6 px-6 lg:mx-0 lg:px-0">
                 {[
                   {
                     id: "identity",
@@ -1317,18 +1317,18 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all border border-transparent text-left group ${activeTab === item.id ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600" : "bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                    className={`shrink-0 lg:w-full flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-xl transition-all border border-transparent text-left group ${activeTab === item.id ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600" : "bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
                   >
                     <div
                       className={`p-2 rounded-xl transition-all shrink-0 ${activeTab === item.id ? `bg-indigo-600 text-white shadow-md shadow-indigo-600/20` : `bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-slate-600`}`}
                     >
                       <item.icon size={16} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold uppercase tracking-wider">
+                    <div className="flex-1 min-w-0 pr-2 lg:pr-0">
+                      <p className="text-[10px] lg:text-xs font-bold uppercase tracking-wider">
                         {item.label}
                       </p>
-                      <p className="text-[11px] text-slate-400 truncate font-medium">
+                      <p className="hidden lg:block text-[11px] text-slate-400 truncate font-medium">
                         {item.desc}
                       </p>
                     </div>
@@ -1349,14 +1349,17 @@ export default function Dashboard() {
                       <div className="bg-white dark:bg-slate-900 rounded-xl p-10 border border-slate-200 dark:border-slate-800 shadow-md relative overflow-hidden group">
                         <div className="relative z-10 flex flex-col items-center text-center">
                           <div className="w-32 h-32 rounded-full p-1 bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 mb-8 relative">
-                            <img
-                              src={
-                                userData?.profilePhoto ||
-                                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                              }
-                              className="w-full h-full object-cover rounded-full"
-                              alt="Profile"
-                            />
+                            {userData?.profilePhoto ? (
+                              <img
+                                src={userData.profilePhoto}
+                                className="w-full h-full object-cover rounded-full"
+                                alt="Profile"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/50 rounded-full text-indigo-600 dark:text-indigo-400 text-5xl font-black">
+                                {userData?.name?.charAt(0).toUpperCase() || "U"}
+                              </div>
+                            )}
                             <input 
                                type="file" 
                                ref={fileInputRef} 
