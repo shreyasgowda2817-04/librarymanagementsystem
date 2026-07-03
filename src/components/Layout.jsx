@@ -227,7 +227,7 @@ export default function Layout({ children }) {
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed left-0 top-0 h-full z-[500] bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out flex flex-col 
+        className={`fixed left-0 top-0 h-full z-[500] bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-200 dark:border-slate-800 transition-all duration-500 ease-in-out flex flex-col overflow-hidden 
           ${(isCollapsed && !isMobileMenuOpen) ? "w-20" : "w-[280px] md:w-72"} 
           ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
