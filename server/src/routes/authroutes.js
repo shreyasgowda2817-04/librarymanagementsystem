@@ -52,7 +52,10 @@ router.post("/send-otp", otpLimiter, sendOTP);
 router.post("/verify-2fa", otpLimiter, verify2FA);
 // Google OAuth
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5173/login?error=google_auth_failed" }), googleCallback);
+router.get("/google/callback", (req, res, next) => {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  passport.authenticate("google", { session: false, failureRedirect: `${frontendUrl}/login?error=google_auth_failed` })(req, res, next);
+}, googleCallback);
 
 
 router.post("/forgot-password", otpLimiter, forgotPassword);
