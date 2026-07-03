@@ -98,8 +98,8 @@ const COOLDOWN_SECONDS = 20;
 const MAX_OTP_ATTEMPTS = 6;
 
 export const sendOTP = async (req, res, next) => {
-
   try {
+    if (req.body.email) req.body.email = req.body.email.trim().toLowerCase();
     const { email, type = "Verification" } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -380,6 +380,7 @@ export const updateSettings = async (req, res, next) => {
 
 export const forgotPassword = async (req, res, next) => {
   try {
+    if (req.body.email) req.body.email = req.body.email.trim().toLowerCase();
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
@@ -413,6 +414,7 @@ export const forgotPassword = async (req, res, next) => {
 
 export const verifyOTP = async (req, res, next) => {
   try {
+    if (req.body.email) req.body.email = req.body.email.trim().toLowerCase();
     const { email, otp } = req.body;
     const user = await User.findOne({
       email,
@@ -446,6 +448,7 @@ export const verifyOTP = async (req, res, next) => {
 
 export const verifyEmail = async (req, res, next) => {
   try {
+    if (req.body.email) req.body.email = req.body.email.trim().toLowerCase();
     const { email, otp } = req.body;
     const user = await User.findOne({
       email,
@@ -490,6 +493,7 @@ export const verifyEmail = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   try {
+    if (req.body.email) req.body.email = req.body.email.trim().toLowerCase();
     const { email, otp, newPassword } = req.body;
 
     const user = await User.findOne({
