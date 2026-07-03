@@ -47,6 +47,8 @@ import Layout from "./components/Layout";
 import AIAssistant from "./components/AIAssistant";
 import { SocketProvider } from "./hooks/useSocket";
 import { FeatureProvider } from "./context/FeatureContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { PageSkeleton } from "./components/Skeletons";
 
 /* ---------- AUTH HELPERS ---------- */
 
@@ -97,10 +99,16 @@ export default function App() {
   }, [location.pathname, navigate, user]);
 
   return (
+    <ErrorBoundary>
     <FeatureProvider>
       <SocketProvider>
-        <Toaster position="top-right" />
-        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-900 text-white"><div className="animate-spin h-12 w-12 border-4 border-indigo-500 rounded-full border-t-transparent"></div></div>}>
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            className: 'sm:bottom-4 sm:right-4 sm:top-auto sm:left-auto',
+          }} 
+        />
+        <Suspense fallback={<PageSkeleton />}>
       <Routes>
         {/* Public route */}
         <Route path="/login" element={<Login />} />
@@ -328,5 +336,6 @@ export default function App() {
       <ChatSupport />
       </SocketProvider>
     </FeatureProvider>
+    </ErrorBoundary>
   );
 }

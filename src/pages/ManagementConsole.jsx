@@ -412,8 +412,8 @@ export default function ManagementConsole() {
                   </div>
                   <div className="max-h-[800px] overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left min-w-[600px] md:min-w-0">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 font-medium tracking-wide">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur text-[10px] font-black text-slate-400 tracking-wide uppercase">
                           <th className="px-10 py-6">Book Details</th>
                           <th className="px-8 py-6">Availability</th>
                           <th className="px-10 py-6 text-right">Actions</th>
@@ -493,8 +493,8 @@ export default function ManagementConsole() {
                   </div>
                   <div className="max-h-[800px] overflow-x-auto custom-scrollbar">
                     <table className="w-full text-left min-w-[600px] md:min-w-0">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 font-medium tracking-wide">
+                      <thead className="sticky top-0 z-10">
+                        <tr className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur text-[10px] font-black text-slate-400 tracking-wide uppercase">
                           <th className="px-10 py-6">Member Name</th>
                           <th className="px-8 py-6">Contact Info</th>
                           <th className="px-10 py-6 text-right">Actions</th>
