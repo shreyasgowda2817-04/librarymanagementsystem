@@ -277,98 +277,65 @@ export default function Dashboard() {
       const token = userObj.token || localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [
-        booksRes,
-        membersRes,
-        txRes,
-        meRes,
-        favRes,
-        resRes,
-        reqRes,
-        leadRes,
-        telRes,
-        sessRes,
-        configRes,
-        auditRes,
-        globalSettingsRes,
-        notifRes,
-        settingsRes,
-      ] = await Promise.all([
+      // CORE DATA - Fetched first to unblock UI instantly
+      const coreRes = await Promise.all([
         fetch(`${API_URL}/api/books`, { headers, credentials: 'include' }),
-        isAdmin
-          ? fetch(`${API_URL}/api/members`, { headers, credentials: 'include' })
-          : Promise.resolve({ ok: false }),
         fetch(`${API_URL}/api/transactions${isAdmin ? "" : "/my"}`, { headers, credentials: 'include' }),
         fetch(`${API_URL}/api/auth/me`, { headers, credentials: 'include' }),
-        fetch(`${API_URL}/api/auth/favorites`, { headers, credentials: 'include' }),
-        fetch(`${API_URL}/api/reservations/my`, { headers, credentials: 'include' }),
-        fetch(`${API_URL}/api/book-requests/my`, { headers, credentials: 'include' }),
-        fetch(`${API_URL}/api/auth/leaderboard`, { headers, credentials: 'include' }),
-        isAdmin
-          ? fetch(`${API_URL}/api/transactions/telemetry`, { headers, credentials: 'include' }).catch(
-            () => ({ ok: false }),
-          )
-          : Promise.resolve({ ok: false }),
-        fetch(`${API_URL}/api/auth/sessions`, { headers, credentials: 'include' }).catch(() => ({
-          ok: false,
-        })),
-        fetch(`${API_URL}/api/config/features`, { headers, credentials: 'include' }).catch(() => ({
-          ok: false,
-        })),
-        isAdmin
-          ? fetch(`${API_URL}/api/audit`, { headers, credentials: 'include' }).catch(() => ({
-            ok: false,
-          }))
-          : Promise.resolve({ ok: false }),
-        isAdmin
-          ? fetch(`${API_URL}/api/admin/settings`, { headers, credentials: 'include' }).catch(() => ({
-            ok: false,
-          }))
-          : Promise.resolve({ ok: false }),
-        fetch(`${API_URL}/api/notifications`, { headers, credentials: 'include' }).catch(() => ({
-          ok: false,
-        })),
-        fetch(`${API_URL}/api/settings`, { headers, credentials: 'include' }).catch(() => ({
-          ok: false,
-        })),
+        fetch(`${API_URL}/api/config/features`, { headers, credentials: 'include' }).catch(() => ({ ok: false })),
+        fetch(`${API_URL}/api/settings`, { headers, credentials: 'include' }).catch(() => ({ ok: false }))
       ]);
 
-      if (booksRes.ok) {
-        const booksData = await booksRes.json();
+      if (coreRes[0].ok) {
+        const booksData = await coreRes[0].json();
         setBooks(Array.isArray(booksData) ? booksData : (booksData.books || []));
       }
-      if (membersRes.ok) setMembers(await membersRes.json());
-      if (txRes.ok) {
-        const txData = await txRes.json();
+      if (coreRes[1].ok) {
+        const txData = await coreRes[1].json();
         setTransactions(Array.isArray(txData) ? txData : (txData.transactions || []));
       }
-      if (meRes.ok) {
-        const data = await meRes.json();
+      if (coreRes[2].ok) {
+        const data = await coreRes[2].json();
         setUserData(data);
         setProfileForm({ name: data.name, email: data.email, password: "" });
         if (data.preferences?.language) setLanguage(data.preferences.language);
       }
-      if (favRes.ok) setFavorites(await favRes.json());
-      if (resRes.ok) setReservations(await resRes.json());
-      if (reqRes.ok) setBookRequests(await reqRes.json());
-      if (leadRes.ok) setLeaderboard(await leadRes.json());
-      if (telRes.ok) setTelemetry(await telRes.json());
-      if (sessRes.ok) setSessions(await sessRes.json());
-      if (configRes.ok) setFeatureConfig(await configRes.json());
-      if (isAdmin && auditRes && auditRes.ok)
-        setAuditLogs(await auditRes.json());
-      if (isAdmin && globalSettingsRes && globalSettingsRes.ok)
-        setGlobalSettings(await globalSettingsRes.json());
-       if (notifRes && notifRes.ok) setNotifications(await notifRes.json());
-      if (settingsRes && settingsRes.ok)
-        setSystemSettings(await settingsRes.json());
+      if (coreRes[3].ok) setFeatureConfig(await coreRes[3].json());
+      if (coreRes[4].ok) setSystemSettings(await coreRes[4].json());
 
-      setLastSync(new Date());
+      // UNBLOCK UI IMMEDIATELY
+      setIsLoading(false);
       setApiStatus("online");
+      setLastSync(new Date());
+
+      // SECONDARY DATA - Fetched silently in the background
+      Promise.all([
+        isAdmin ? fetch(`${API_URL}/api/members`, { headers, credentials: 'include' }) : Promise.resolve({ ok: false }),
+        fetch(`${API_URL}/api/auth/favorites`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/reservations/my`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/book-requests/my`, { headers, credentials: 'include' }),
+        fetch(`${API_URL}/api/auth/leaderboard`, { headers, credentials: 'include' }),
+        isAdmin ? fetch(`${API_URL}/api/transactions/telemetry`, { headers, credentials: 'include' }).catch(() => ({ ok: false })) : Promise.resolve({ ok: false }),
+        fetch(`${API_URL}/api/auth/sessions`, { headers, credentials: 'include' }).catch(() => ({ ok: false })),
+        isAdmin ? fetch(`${API_URL}/api/audit`, { headers, credentials: 'include' }).catch(() => ({ ok: false })) : Promise.resolve({ ok: false }),
+        isAdmin ? fetch(`${API_URL}/api/admin/settings`, { headers, credentials: 'include' }).catch(() => ({ ok: false })) : Promise.resolve({ ok: false }),
+        fetch(`${API_URL}/api/notifications`, { headers, credentials: 'include' }).catch(() => ({ ok: false }))
+      ]).then(async (secRes) => {
+        if (secRes[0].ok) setMembers(await secRes[0].json());
+        if (secRes[1].ok) setFavorites(await secRes[1].json());
+        if (secRes[2].ok) setReservations(await secRes[2].json());
+        if (secRes[3].ok) setBookRequests(await secRes[3].json());
+        if (secRes[4].ok) setLeaderboard(await secRes[4].json());
+        if (secRes[5].ok) setTelemetry(await secRes[5].json());
+        if (secRes[6].ok) setSessions(await secRes[6].json());
+        if (secRes[7] && secRes[7].ok) setAuditLogs(await secRes[7].json());
+        if (secRes[8] && secRes[8].ok) setGlobalSettings(await secRes[8].json());
+        if (secRes[9] && secRes[9].ok) setNotifications(await secRes[9].json());
+      }).catch(console.error);
+
     } catch (error) {
       setApiStatus("offline");
       toast.error("System Offline. Retrying...");
-    } finally {
       setIsLoading(false);
     }
   };
