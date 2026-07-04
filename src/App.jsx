@@ -12,10 +12,10 @@ import {
 import { Suspense, lazy, useEffect } from "react";
 
 import LandingPage from "./pages/LandingPage";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 
 // Primary Pages (Lazy Loaded for Performance)
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Books = lazy(() => import("./pages/Books"));
 const IssueReturn = lazy(() => import("./pages/IssueReturn"));
@@ -43,13 +43,13 @@ const ResearchWorkspace = lazy(() => import("./pages/ResearchWorkspace"));
 const AIExplore = lazy(() => import("./pages/AIExplore"));
 
 import Footer from "./components/Footer";
-import ChatSupport from "./components/ChatSupport";
 import FocusMode from "./components/FocusMode";
-import { FaBars, FaTimes, FaSignOutAlt, FaBell, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaCalendarAlt, FaInstagram, FaTwitter, FaYoutube, FaEnvelope, FaHeart, FaSun, FaMoon, FaUserEdit, FaChevronLeft, FaEye, FaGraduationCap, FaBookOpen, FaSearch, FaArrowRight, FaChartPie, FaBook, FaUsers, FaClipboardList, FaBrain } from "react-icons/fa";
 import { Toaster, toast } from 'react-hot-toast';
 import Layout from "./components/Layout";
-import AIAssistant from "./components/AIAssistant";
 import { SocketProvider } from "./hooks/useSocket";
+
+const ChatSupport = lazy(() => import("./components/ChatSupport"));
+const AIAssistant = lazy(() => import("./components/AIAssistant"));
 import { FeatureProvider } from "./context/FeatureContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { PageSkeleton } from "./components/Skeletons";
@@ -343,7 +343,11 @@ export default function App() {
 
       </Routes>
       </Suspense>
-      <ChatSupport />
+        <Suspense fallback={null}>
+          {user && <AIAssistant />}
+          {user && <ChatSupport />}
+          {!user && location.pathname === "/" && <ChatSupport />}
+        </Suspense>
       </SocketProvider>
     </FeatureProvider>
     </ErrorBoundary>

@@ -89,12 +89,7 @@ export default function LandingPage() {
           <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]"></div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative z-10 max-w-4xl"
-        >
+        <div className="relative z-10 max-w-4xl">
           <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[10px] font-black text-indigo-500 font-medium tracking-wide mb-10">
              <Sparkles size={14} /> Intelligence-Driven Infrastructure
           </div>
@@ -120,7 +115,7 @@ export default function LandingPage() {
                 <Play size={20} fill="currentColor" /> Watch Platform Demo
               </button>
           </div>
-        </motion.div>
+        </div>
 
       </section>
 
