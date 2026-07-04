@@ -11,14 +11,16 @@ import {
 } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 
-import Dashboard from "./pages/Dashboard";
-import Books from "./pages/Books";
-import IssueReturn from "./pages/IssueReturn";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import StudentFines from "./pages/StudentFines";
-import ManagementConsole from "./pages/ManagementConsole";
+
+// Primary Pages (Lazy Loaded for Performance)
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Books = lazy(() => import("./pages/Books"));
+const IssueReturn = lazy(() => import("./pages/IssueReturn"));
+const StudentFines = lazy(() => import("./pages/StudentFines"));
+const ManagementConsole = lazy(() => import("./pages/ManagementConsole"));
 
 // Secondary Pages (Lazy Loaded)
 const Members = lazy(() => import("./pages/Members"));
