@@ -58,11 +58,6 @@ import { PageSkeleton } from "./components/Skeletons";
 
 function useAuth() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
-
-  // Ping backend to wake up Render free tier server on load
-  useEffect(() => {
-    fetch(`${API_URL}/api/books?limit=1`).catch(() => {});
-  }, []);
   return { user };
 }
 
