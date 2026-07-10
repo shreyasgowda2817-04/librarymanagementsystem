@@ -3,6 +3,7 @@ import sendEmail from "../services/emailService.js";
 import { createAuditEntry } from "./auditController.js";
 import fs from "fs";
 import path from "path";
+import { scanOverdueBooks, scanDueTomorrowBooks } from "../utils/cronJobs.js";
 import { fileURLToPath } from "url";
 import Book from "../models/book.js";
 import Transaction from "../models/transaction.js";
@@ -194,5 +195,23 @@ export const auditInventory = async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+};
+
+export const forceOverdueNotices = async (req, res, next) => {
+  try {
+    res.status(200).json({ message: "Overdue notices automated scan started in the background." });
+    scanOverdueBooks().catch(err => console.error("Error running overdue notices:", err));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forceDueTomorrowReminders = async (req, res, next) => {
+  try {
+    res.status(200).json({ message: "Due tomorrow reminders automated scan started in the background." });
+    scanDueTomorrowBooks().catch(err => console.error("Error running due tomorrow reminders:", err));
+  } catch (error) {
+    next(error);
   }
 };

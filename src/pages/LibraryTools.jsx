@@ -532,14 +532,14 @@ export default function LibraryTools() {
                 </p>
 
                 <div className="space-y-4">
-                  <button onClick={() => toast.success("Overdue notices dispatched successfully!")} className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors group">
+                  <button onClick={() => handleForceAutomation("overdue")} className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-rose-500/20 text-rose-400 rounded-lg flex items-center justify-center"><AlertCircle size={16} /></div>
                       <span className="font-bold text-sm">Force Overdue Notices</span>
                     </div>
                     <Send size={16} className="text-white/30 group-hover:text-white transition-colors" />
                   </button>
-                  <button onClick={() => toast.success("Due tomorrow reminders dispatched!")} className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors group">
+                  <button onClick={() => handleForceAutomation("reminders")} className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center"><FileText size={16} /></div>
                       <span className="font-bold text-sm">Force Due Tomorrow Reminders</span>
