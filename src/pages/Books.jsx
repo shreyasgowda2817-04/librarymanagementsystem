@@ -227,7 +227,7 @@ export default function Books() {
     let url = book.pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
     let downloadUrl = url;
 
-    if (url.includes(API_URL) || url.startsWith("/api")) {
+    if ((url.includes(API_URL) || url.startsWith("/api")) && !url.includes("/uploads/")) {
       const bookId = book._id || book.id;
       const secureEndpoint = `${API_URL}/api/books/read/${bookId}`;
       const secureUrl = await fetchSecurePdf(secureEndpoint);
