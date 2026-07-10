@@ -28,27 +28,43 @@ export const broadcastMessage = async (req, res, next) => {
       return res.status(404).json({ message: "No recipients found for this audience." });
     }
 
-    const emailPromises = users.map(user => {
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
-            <h2 style="color: white; margin: 0;">Library Announcement</h2>
-          </div>
-          <div style="padding: 30px; color: #1e293b; line-height: 1.6;">
-            <p>Hello <strong>${user.name}</strong>,</p>
-            <p>${message.replace(/\n/g, "<br>")}</p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
-              Sent by Library Administration
+    // Return response immediately to prevent frontend hanging
+    res.status(200).json({ message: "Broadcast process started in the background.", count: users.length });
+
+    // Process emails in the background using an async IIFE
+    (async () => {
+      const batchSize = 10;
+      for (let i = 0; i < users.length; i += batchSize) {
+        const batch = users.slice(i, i + batchSize);
+        const emailPromises = batch.map(user => {
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+              <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
+                <h2 style="color: white; margin: 0;">Library Announcement</h2>
+              </div>
+              <div style="padding: 30px; color: #1e293b; line-height: 1.6;">
+                <p>Hello <strong>${user.name}</strong>,</p>
+                <p>${message.replace(/\n/g, "<br>")}</p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
+                  Sent by Library Administration
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      `;
-      return sendEmail(user.email, subject, html);
+          `;
+          return sendEmail(user.email, subject, html);
+        });
+
+        await Promise.allSettled(emailPromises);
+        
+        // Add a small delay between batches to avoid rate limits
+        if (i + batchSize < users.length) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+      console.log("✅ Background broadcast completed for", users.length, "users.");
+    })().catch(err => {
+      console.error("Background Broadcast Error:", err);
     });
-
-    await Promise.allSettled(emailPromises);
-
-    res.status(200).json({ message: "Broadcast sent successfully", count: users.length });
   } catch (err) {
     next(err);
   }
