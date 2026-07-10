@@ -76,7 +76,7 @@ const sendEmail = async (to, subject, html, bcc = null) => {
       // NODEMAILER FALLBACK DELIVERY
       const mailOptions = {
         from: `"Library Infrastructure Security" <${process.env.EMAIL_USER}>`,
-        to: to || [],
+        to: to || process.env.EMAIL_USER,
         bcc: bcc || [],
         subject,
         html
