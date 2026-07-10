@@ -82,13 +82,8 @@ app.use((req, res, next) => {
 
 app.use(maintenanceMode);
 
-// Serve static files from the uploads directory (except PDFs)
-app.use("/uploads", (req, res, next) => {
-  if (req.path.toLowerCase().endsWith(".pdf")) {
-    return res.status(403).json({ message: "Direct access to PDFs is forbidden. Please log in." });
-  }
-  next();
-}, express.static(path.join(__dirname, "../uploads")));
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/libraryDB";
 console.log("Attempting to connect to MongoDB...");
