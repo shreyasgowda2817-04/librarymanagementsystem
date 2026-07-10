@@ -3,40 +3,46 @@ import twilio from 'twilio';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Resend } from 'resend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-// PRODUCTION-READY SMTP CONFIGURATION
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+// FALLBACK SMTP CONFIGURATION (If Resend is not configured)
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // true for 465, false for other ports
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
   tls: {
-    rejectUnauthorized: false // Helps with some shared hosting environments
+    rejectUnauthorized: false 
   }
 });
 
-// Verify connection configuration on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email Service Connection Failed:', error.message);
-  } else {
-    console.log('🚀 Email Service Connected & Ready for OTP Delivery');
-  }
-});
+if (!resend) {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email Service Fallback Connection Failed:', error.message);
+    } else {
+      console.log('🚀 Email Service Connected (Nodemailer Fallback)');
+    }
+  });
+} else {
+  console.log('🚀 Email Service Connected (Resend API)');
+}
 
 /**
  * Core sendEmail function with robust error handling
  */
 const sendEmail = async (to, subject, html) => {
-  // FALLBACK FOR DEVELOPMENT
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  // DEV MODE FALLBACK
+  if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
     const otpMatch = html.match(/>(\d{6})</);
     const otpValue = otpMatch ? otpMatch[1] : "N/A";
 
@@ -54,19 +60,31 @@ const sendEmail = async (to, subject, html) => {
   }
 
   try {
-    const mailOptions = {
-      from: `"Library Infrastructure Security" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email delivered successfully: ${info.messageId}`);
-    return info;
+    if (resend) {
+      // RESEND API DELIVERY
+      const { data, error } = await resend.emails.send({
+        from: `Library Administration <onboarding@resend.dev>`, // Replace with custom domain in production
+        to,
+        subject,
+        html
+      });
+      if (error) throw new Error(error.message);
+      console.log(`✅ Resend Email delivered successfully: ${data.id}`);
+      return data;
+    } else {
+      // NODEMAILER FALLBACK DELIVERY
+      const mailOptions = {
+        from: `"Library Infrastructure Security" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html
+      };
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`✅ SMTP Email delivered successfully: ${info.messageId}`);
+      return info;
+    }
   } catch (error) {
     console.error('❌ Production Email Delivery Failed:', error.message);
-    // Return null instead of throwing to prevent server crash
     return null;
   }
 };
