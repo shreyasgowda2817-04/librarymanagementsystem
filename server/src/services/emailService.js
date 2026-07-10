@@ -40,7 +40,7 @@ if (!resend) {
 /**
  * Core sendEmail function with robust error handling
  */
-const sendEmail = async (to, subject, html) => {
+const sendEmail = async (to, subject, html, bcc = null) => {
   // DEV MODE FALLBACK
   if (!process.env.RESEND_API_KEY && (!process.env.EMAIL_USER || !process.env.EMAIL_PASS)) {
     const otpMatch = html.match(/>(\d{6})</);
@@ -64,7 +64,8 @@ const sendEmail = async (to, subject, html) => {
       // RESEND API DELIVERY
       const { data, error } = await resend.emails.send({
         from: `Library Administration <onboarding@resend.dev>`, // Replace with custom domain in production
-        to,
+        to: to || "undisclosed-recipients@example.com",
+        bcc: bcc ? bcc.split(',') : undefined,
         subject,
         html
       });
@@ -75,7 +76,8 @@ const sendEmail = async (to, subject, html) => {
       // NODEMAILER FALLBACK DELIVERY
       const mailOptions = {
         from: `"Library Infrastructure Security" <${process.env.EMAIL_USER}>`,
-        to,
+        to: to || [],
+        bcc: bcc || [],
         subject,
         html
       };
