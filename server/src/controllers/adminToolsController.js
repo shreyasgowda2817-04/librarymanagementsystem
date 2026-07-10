@@ -18,7 +18,7 @@ export const broadcastMessage = async (req, res, next) => {
     let query = {};
 
     if (audience === "all") {
-      query = { role: "student", accountStatus: "active" };
+      query = { role: { $in: ["student", "admin"] }, accountStatus: "active" };
     } else if (audience === "overdue") {
       return res.status(501).json({ message: "Overdue filtering is currently mocked. Use 'All Active Members'." });
     }
