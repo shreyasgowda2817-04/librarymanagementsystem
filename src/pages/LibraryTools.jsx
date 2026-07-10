@@ -4,11 +4,12 @@ import { API_URL } from "../config";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Megaphone, QrCode, Send, BookOpen, Users, 
-  Download, Printer, AlertCircle, FileText
+  Download, Printer, AlertCircle, FileText, Sparkles
 } from "lucide-react";
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import * as XLSX from "xlsx";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function LibraryTools() {
   const [activeTab, setActiveTab] = useState("broadcast"); // broadcast, barcodes, import, audit
@@ -21,6 +22,7 @@ export default function LibraryTools() {
     message: ""
   });
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Barcode State
   const [barcodeType, setBarcodeType] = useState("books"); // books, members
@@ -32,12 +34,50 @@ export default function LibraryTools() {
   const [importFile, setImportFile] = useState(null);
   const [importPreview, setImportPreview] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [isAiEnriching, setIsAiEnriching] = useState(false);
 
   // Audit State
   const [scannedIds, setScannedIds] = useState([]);
   const [currentScan, setCurrentScan] = useState("");
   const [auditResult, setAuditResult] = useState(null);
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  useEffect(() => {
+    let html5QrcodeScanner;
+    
+    if (activeTab === "audit" && isCameraActive) {
+      html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: {width: 250, height: 250} },
+        false
+      );
+      
+      html5QrcodeScanner.render(
+        (decodedText) => {
+          const id = decodedText.trim();
+          setScannedIds((prev) => {
+            if (!prev.includes(id)) {
+               toast.success("Scanned: " + id);
+               return [id, ...prev];
+            }
+            return prev;
+          });
+        },
+        (error) => {
+          // Ignore frequent scanning errors
+        }
+      );
+    }
+    
+    return () => {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(error => {
+          console.error("Failed to clear html5QrcodeScanner. ", error);
+        });
+      }
+    };
+  }, [activeTab, isCameraActive]);
 
   useEffect(() => {
     if (activeTab === "barcodes") {
@@ -91,6 +131,36 @@ export default function LibraryTools() {
       toast.error(err.message);
     } finally {
       setIsBroadcasting(false);
+    }
+  };
+
+  const handleAiTranslate = async (targetLang) => {
+    if (!broadcastForm.message) {
+      toast.error("Please enter a message to translate.");
+      return;
+    }
+    setIsTranslating(true);
+    const toastId = toast.loading(`Translating to ${targetLang}...`);
+    try {
+      const res = await fetch(`${API_URL}/api/ai/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({ 
+          message: `Translate the following announcement to ${targetLang}. Return ONLY the translated text in the native script without any quotes, english text, or introductory remarks:\n\n${broadcastForm.message}` 
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error("Translation failed");
+      
+      setBroadcastForm({ ...broadcastForm, message: data.reply });
+      toast.success("Translation complete!", { id: toastId });
+    } catch (err) {
+      toast.error(err.message, { id: toastId });
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -194,6 +264,61 @@ export default function LibraryTools() {
       setImportPreview(data);
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleAiEnrichment = async () => {
+    if (importPreview.length === 0) return;
+    setIsAiEnriching(true);
+    const toastId = toast.loading("AI is researching metadata (this may take a moment)...");
+    
+    try {
+      const titles = importPreview.slice(0, 50).map(row => row.Title || row.title).filter(Boolean);
+      
+      if (titles.length === 0) throw new Error("No 'Title' or 'title' column found in the spreadsheet.");
+
+      const res = await fetch(`${API_URL}/api/ai/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({
+          message: `I have a list of book titles. I need you to return a JSON array where each object has "Title", "Author", and "Category". DO NOT return any markdown formatting, just the raw JSON array. Here are the titles: \n\n${titles.join("\n")}`
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error("AI Enrichment failed");
+      
+      let enrichedData = [];
+      try {
+         const cleanJsonStr = data.reply.replace(/```json/g, '').replace(/```/g, '').trim();
+         enrichedData = JSON.parse(cleanJsonStr);
+      } catch (parseError) {
+         console.error(parseError);
+         throw new Error("AI returned malformed data. Please try again.");
+      }
+
+      const newPreview = importPreview.map(row => {
+        const title = row.Title || row.title;
+        const aiMatch = enrichedData.find(e => e.Title === title || e.title === title);
+        if (aiMatch) {
+          return {
+            ...row,
+            Author: row.Author || row.author || aiMatch.Author || aiMatch.author,
+            Category: row.Category || row.category || aiMatch.Category || aiMatch.category,
+            Stock: row.Stock || row.stock || 1
+          };
+        }
+        return row;
+      });
+
+      setImportPreview(newPreview);
+      toast.success("AI successfully enriched your data!", { id: toastId });
+    } catch (err) {
+      toast.error(err.message, { id: toastId });
+    } finally {
+      setIsAiEnriching(false);
+    }
   };
 
   const submitImport = async () => {
@@ -358,7 +483,17 @@ export default function LibraryTools() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Message Body</label>
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Message Body</label>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => handleAiTranslate("Hindi")} disabled={isTranslating} className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded hover:bg-indigo-100 transition-colors disabled:opacity-50">
+                        ✨ Translate Hindi
+                      </button>
+                      <button type="button" onClick={() => handleAiTranslate("Kannada")} disabled={isTranslating} className="text-[10px] font-bold bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1 rounded hover:bg-purple-100 transition-colors disabled:opacity-50">
+                        ✨ Translate Kannada
+                      </button>
+                    </div>
+                  </div>
                   <textarea
                     name="message"
                     value={broadcastForm.message}
@@ -542,14 +677,24 @@ export default function LibraryTools() {
                   </label>
                   
                   {importPreview.length > 0 && (
-                    <button
-                      onClick={submitImport}
-                      disabled={isImporting}
-                      className="px-6 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {isImporting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Send size={16} />}
-                      Import {importPreview.length} Records
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAiEnrichment}
+                        disabled={isAiEnriching || isImporting}
+                        className="px-6 py-2 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {isAiEnriching ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Sparkles size={16} />}
+                        AI Auto-Complete
+                      </button>
+                      <button
+                        onClick={submitImport}
+                        disabled={isImporting || isAiEnriching}
+                        className="px-6 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {isImporting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <Send size={16} />}
+                        Import {importPreview.length} Records
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -635,10 +780,22 @@ export default function LibraryTools() {
                   <div className="bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 p-6 rounded-2xl text-center">
                     <QrCode className="mx-auto text-indigo-500 mb-4" size={32} />
                     <h3 className="font-black text-slate-900 dark:text-white mb-2">Scan Item</h3>
+                    
+                    <button 
+                      onClick={() => setIsCameraActive(!isCameraActive)}
+                      className={`w-full py-2 mb-4 text-xs font-bold rounded-xl transition-all ${isCameraActive ? 'bg-rose-100 text-rose-600' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                    >
+                      {isCameraActive ? "Stop Camera" : "Start Live Camera Scan"}
+                    </button>
+
+                    {isCameraActive && (
+                      <div id="reader" className="w-full bg-black rounded-xl overflow-hidden mb-4 border border-indigo-200 dark:border-indigo-800"></div>
+                    )}
+
                     <input
                       type="text"
                       autoFocus
-                      placeholder="Scan Barcode & Press Enter..."
+                      placeholder="Or Scan with USB Scanner..."
                       value={currentScan}
                       onChange={(e) => setCurrentScan(e.target.value)}
                       onKeyDown={handleScan}
