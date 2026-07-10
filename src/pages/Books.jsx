@@ -132,13 +132,14 @@ export default function Books() {
 
     let url = book.pdfUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 
-    // Construct secure endpoint for backend-hosted PDFs
-    if (url.includes(API_URL) || url.startsWith("/api")) {
+    // Construct secure endpoint for backend-hosted GridFS PDFs
+    // If it's a static file in /uploads/, treat it as a normal external URL
+    if ((url.includes(API_URL) || url.startsWith("/api")) && !url.includes("/uploads/")) {
       const bookId = book._id || book.id;
       url = `${API_URL}/api/books/read/${bookId}`;
       await fetchSecurePdf(url);
     } else {
-      setPdfBlobUrl(url); // External URL or fallback
+      setPdfBlobUrl(url); // External URL, static upload, or fallback
     }
   };
 
