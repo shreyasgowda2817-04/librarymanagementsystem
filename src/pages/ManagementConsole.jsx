@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { API_URL } from "../config";
 import {
   FaBook, FaUsers, FaTrash, FaPlus, FaClipboardList, FaCheck, FaTimes,
-  FaTools, FaDatabase, FaLayerGroup, FaHistory, FaShieldAlt, FaFileExport, FaCogs, FaPlay, FaPowerOff, FaChartBar
+  FaTools, FaDatabase, FaLayerGroup, FaHistory, FaShieldAlt, FaFileExport, FaCogs, FaPlay, FaPowerOff, FaChartBar, FaChartLine
 } from "react-icons/fa";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
@@ -21,8 +21,27 @@ export default function ManagementConsole() {
   const [newMember, setNewMember] = useState({ name: "", email: "", phone: "" });
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState("assets");
+  const [revenueStats, setRevenueStats] = useState(null);
+  const [revenueLoading, setRevenueLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState([]);
+
+  const fetchRevenueData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/transactions/revenue-stats`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok) setRevenueStats(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRevenueLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "revenue") fetchRevenueData();
+  }, [activeTab]);
 
   const fetchData = async () => {
     try {
@@ -352,6 +371,85 @@ export default function ManagementConsole() {
 
         <AnimatePresence mode="wait">
 
+          
+          {activeTab === "revenue" && (
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                 <div>
+                   <h2 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Live Revenue</h2>
+                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Real-time financial metrics</p>
+                 </div>
+                 <button onClick={fetchRevenueData} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+                   Refresh Data
+                 </button>
+              </div>
+
+              {revenueLoading ? (
+                <div className="flex justify-center p-20"><FaSpinner className="animate-spin text-indigo-500" size={40} /></div>
+              ) : revenueStats ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                     <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Total Revenue</p>
+                        <h3 className="text-3xl font-black text-slate-800 dark:text-white">₹{revenueStats.totalRevenue || 0}</h3>
+                     </div>
+                     <div className="bg-indigo-500/10 border border-indigo-500/20 p-6 rounded-2xl">
+                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2">Today's Revenue</p>
+                        <h3 className="text-3xl font-black text-slate-800 dark:text-white">₹{revenueStats.todayRevenue || 0}</h3>
+                     </div>
+                     <div className="bg-purple-500/10 border border-purple-500/20 p-6 rounded-2xl">
+                        <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2">Monthly Revenue</p>
+                        <h3 className="text-3xl font-black text-slate-800 dark:text-white">₹{revenueStats.monthlyRevenue || 0}</h3>
+                     </div>
+                     <div className="bg-rose-500/10 border border-rose-500/20 p-6 rounded-2xl">
+                        <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-2">Fines Collected</p>
+                        <h3 className="text-3xl font-black text-slate-800 dark:text-white">₹{revenueStats.fineRevenue || 0}</h3>
+                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                     <div className="bg-white dark:bg-[#1e293b] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-6">Revenue by Source</h3>
+                        <div className="space-y-4">
+                           <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Memberships</span>
+                              <span className="text-sm font-black text-slate-800 dark:text-white">₹{revenueStats.membershipRevenue || 0}</span>
+                           </div>
+                           <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Study Rooms</span>
+                              <span className="text-sm font-black text-slate-800 dark:text-white">₹{revenueStats.studyRoomRevenue || 0}</span>
+                           </div>
+                           <div className="flex justify-between items-center pb-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Fines</span>
+                              <span className="text-sm font-black text-slate-800 dark:text-white">₹{revenueStats.fineRevenue || 0}</span>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div className="bg-white dark:bg-[#1e293b] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-6">Recent Transactions</h3>
+                        <div className="space-y-3">
+                           {(revenueStats.recentTransactions || []).map((t, i) => (
+                              <div key={i} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+                                 <div>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-white">{t.transactionId}</p>
+                                    <p className="text-[10px] text-slate-500">{new Date(t.timestamp).toLocaleString()} • {t.paymentType}</p>
+                                 </div>
+                                 <span className="text-sm font-black text-emerald-500">₹{t.amount}</span>
+                              </div>
+                           ))}
+                           {!(revenueStats.recentTransactions || []).length && (
+                              <p className="text-xs text-slate-400">No recent transactions.</p>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-10 text-center text-slate-400">Failed to load revenue data</div>
+              )}
+            </motion.div>
+          )}
           {activeTab === "analytics" && (
             <motion.div key="analytics" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white dark:bg-slate-900 p-10 rounded-xl shadow-md border border-slate-200 dark:border-slate-800">
               <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-8 flex items-center gap-4">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import toast from 'react-hot-toast';
 import { API_URL } from "../config";
 import {
@@ -40,6 +40,9 @@ export default function Books() {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [extractedPdfText, setExtractedPdfText] = useState("");
   const [isExtractingText, setIsExtractingText] = useState(false);
+  const [paragraphs, setParagraphs] = useState([]);
+  const [currentParagraphIndex, setCurrentParagraphIndex] = useState(0);
+  const cloudAudioRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isAdmin = user?.role === "admin";
@@ -174,8 +177,16 @@ export default function Books() {
         const pageText = textContent.items.map(item => item.str).join(" ");
         fullText += pageText + " ";
       }
-      setExtractedPdfText(fullText.trim());
-      return fullText.trim();
+      
+      const cleanText = fullText.trim();
+      setExtractedPdfText(cleanText);
+      
+      // Split into sentences/paragraphs (approximate by periods followed by spaces)
+      const chunks = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+      setParagraphs(chunks);
+      setCurrentParagraphIndex(0);
+      
+      return cleanText;
     } catch (e) {
       console.error("PDF Text Extraction failed:", e);
       toast.error("Could not extract text from this PDF for audio playback.");
@@ -185,75 +196,165 @@ export default function Books() {
     }
   };
 
+  const playWithSpeechSynthesis = (textToRead, idx, currentParagraphs) => {
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.rate = playbackSpeed;
+    utterance.lang = selectedLanguage === 'hi' ? 'hi-IN' : selectedLanguage === 'kn' ? 'kn-IN' : 'en-US';
+    
+    const voice = availableVoices.find(v => v.lang.replace('_', '-').split('-')[0].toLowerCase() === selectedLanguage);
+    if (voice) {
+      utterance.voice = voice;
+    }
+    
+    utterance.onend = (e) => {
+       if (window.speechSynthesis.pending || !isPlayingAudio) return;
+       setCurrentParagraphIndex(prev => {
+          const nextIdx = prev + 1;
+          setTimeout(() => playParagraph(nextIdx, currentParagraphs), 300);
+          return nextIdx;
+       });
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    setIsPlayingAudio(true);
+  };
+
+  const playParagraph = async (index, currentParagraphs = paragraphs) => {
+    if (!currentParagraphs || currentParagraphs.length === 0) return;
+    if (index < 0) index = 0;
+    if (index >= currentParagraphs.length) {
+       setIsPlayingAudio(false);
+       return;
+    }
+    
+    window.speechSynthesis.cancel();
+    if (cloudAudioRef.current) cloudAudioRef.current.pause();
+    
+    setCurrentParagraphIndex(index);
+    let textToRead = currentParagraphs[index];
+    
+    if (selectedLanguage !== 'en') {
+      try {
+        toast.loading(`Translating...`, { id: "translation" });
+        const langName = selectedLanguage === 'hi' ? 'Hindi' : 'Kannada';
+        const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+        const token = currentUser?.token;
+        
+        if (!token) throw new Error("No auth token found");
+        
+        const response = await fetch(`${API_URL}/api/ai/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ message: `Translate to ${langName}. Return ONLY the translated text in the native script (Devanagari for Hindi, Kannada script for Kannada), no introductory remarks or english text:\n\n${textToRead.substring(0,2000)}` })
+        });
+        const data = await response.json();
+        if (response.ok && data.reply) {
+          textToRead = data.reply;
+          toast.success("Translated!", { id: "translation" });
+
+          // Bypass unreliable OS SpeechSynthesis and use Cloud TTS for foreign languages
+          const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(textToRead.substring(0,200))}&tl=${selectedLanguage}&client=tw-ob`;
+          const audio = new Audio(ttsUrl);
+          cloudAudioRef.current = audio;
+          
+          audio.onended = () => {
+             if (!isPlayingAudio) return;
+             setCurrentParagraphIndex(prev => {
+                const nextIdx = prev + 1;
+                setTimeout(() => playParagraph(nextIdx, currentParagraphs), 300);
+                return nextIdx;
+             });
+          };
+          audio.onerror = () => {
+             console.error("Cloud TTS failed, attempting fallback...");
+             playWithSpeechSynthesis(textToRead, index, currentParagraphs);
+          };
+          audio.playbackRate = playbackSpeed;
+          audio.play();
+          setIsPlayingAudio(true);
+          return;
+        }
+      } catch (e) {
+        toast.error("Translation failed.", { id: "translation" });
+      }
+    }
+    
+    playWithSpeechSynthesis(textToRead, index, currentParagraphs);
+  };
+
   const handleToggleAudio = async () => {
     if (isPlayingAudio) {
       window.speechSynthesis.pause();
+      if (cloudAudioRef.current) cloudAudioRef.current.pause();
       setIsPlayingAudio(false);
     } else {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
-        setIsPlayingAudio(true);
-      } else {
-        let textToRead = extractedPdfText;
-        if (!textToRead && pdfBlobUrl) {
-          textToRead = await extractTextFromPdf(pdfBlobUrl);
-        }
-        
-        if (!textToRead) {
-          textToRead = readingBook?.description || `Welcome to the audiobook summary of ${readingBook?.title}. Unfortunately, we could not extract text from the PDF file for this book.`;
-        }
+      }
+      if (cloudAudioRef.current && cloudAudioRef.current.paused) {
+        cloudAudioRef.current.play();
+      }
+      setIsPlayingAudio(true);
 
-        // REAL TRANSLATION LOGIC
-        if (selectedLanguage !== 'en') {
-          try {
-            toast.loading(`Translating to ${selectedLanguage === 'hi' ? 'Hindi' : 'Kannada'}...`, { id: "translation" });
-            const langName = selectedLanguage === 'hi' ? 'Hindi' : 'Kannada';
-            
-            // Limit text to avoid overwhelming AI limits
-            const textToTranslate = textToRead.substring(0, 2000);
-            
-            const token = localStorage.getItem("token");
-            const response = await fetch(`${API_URL}/api/ai/analyze`, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-              },
-              body: JSON.stringify({ message: `Translate the following text to ${langName}. Return ONLY the translated text, absolutely no other formatting or introductory remarks:\n\n${textToTranslate}` })
-            });
-            const data = await response.json();
-            if (response.ok && data.reply) {
-              textToRead = data.reply;
-              toast.success("Translation complete!", { id: "translation" });
-            } else {
-              throw new Error(data.error || "Translation failed");
+      // If we are starting fresh (nothing was paused)
+      if (!window.speechSynthesis.paused && (!cloudAudioRef.current || cloudAudioRef.current.paused)) {
+         let activeParagraphs = paragraphs;
+         if (activeParagraphs.length === 0 && pdfBlobUrl) {
+            const cleanText = await extractTextFromPdf(pdfBlobUrl);
+            if (cleanText) {
+               activeParagraphs = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+               setParagraphs(activeParagraphs);
             }
-          } catch (e) {
-            console.error(e);
-            toast.error("AI Translation failed. Using English fallback.", { id: "translation" });
-          }
-        }
-
-        const utterance = new SpeechSynthesisUtterance(textToRead);
-        utterance.rate = playbackSpeed;
-        
-        // Find matching voice for selected language
-        const voice = availableVoices.find(v => v.lang.replace('_', '-').split('-')[0].toLowerCase() === selectedLanguage);
-        if (voice) {
-          utterance.voice = voice;
-        }
-        
-        utterance.onend = () => setIsPlayingAudio(false);
-        window.speechSynthesis.speak(utterance);
-        setIsPlayingAudio(true);
+         }
+         if (activeParagraphs.length > 0) {
+            playParagraph(currentParagraphIndex, activeParagraphs);
+         }
       }
     }
   };
 
   const handleStopAudio = () => {
     window.speechSynthesis.cancel();
+    if (cloudAudioRef.current) {
+       cloudAudioRef.current.pause();
+       cloudAudioRef.current.currentTime = 0;
+    }
     setIsPlayingAudio(false);
   };
+  
+  const handleNextParagraph = () => {
+    if (currentParagraphIndex < paragraphs.length - 1) {
+       playParagraph(currentParagraphIndex + 1, paragraphs);
+    }
+  };
+
+  const handlePrevParagraph = () => {
+    if (currentParagraphIndex > 0) {
+       playParagraph(currentParagraphIndex - 1, paragraphs);
+    }
+  };
+  
+  // KEYBOARD SHORTCUTS
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!readingBook) return;
+      if (e.code === 'Space') {
+         e.preventDefault();
+         handleToggleAudio();
+      } else if (e.code === 'ArrowRight') {
+         handleNextParagraph();
+      } else if (e.code === 'ArrowLeft') {
+         handlePrevParagraph();
+      } else if (e.code === 'Equal' || e.key === '+') {
+         setPlaybackSpeed(s => Math.min(2, s + 0.25));
+      } else if (e.code === 'Minus' || e.key === '-') {
+         setPlaybackSpeed(s => Math.max(0.5, s - 0.25));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [readingBook, isPlayingAudio, currentParagraphIndex, paragraphs]);
+
 
   const handleDownload = async (book) => {
     if (!book) return;
@@ -623,27 +724,6 @@ export default function Books() {
               <div className="flex-1 flex justify-center"></div>
 
               <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
-                {/* SIMPLE AUDIO UI */}
-                <div className="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl mr-2 border border-white/10">
-                  <select 
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="bg-transparent text-[11px] text-white font-bold outline-none cursor-pointer tracking-wider uppercase"
-                  >
-                    <option value="en" className="bg-slate-900">English</option>
-                    <option value="hi" className="bg-slate-900">Hindi</option>
-                    <option value="kn" className="bg-slate-900">Kannada</option>
-                  </select>
-                  <div className="w-px h-4 bg-white/20 mx-1"></div>
-                  <button onClick={handleToggleAudio} disabled={isExtractingText || isPdfLoading} className="text-white hover:text-indigo-400 transition-colors disabled:text-slate-500">
-                    {isExtractingText ? <FaSpinner className="animate-spin" size={16} /> : isPlayingAudio ? <FaPause size={16} /> : <FaPlay size={16} />}
-                  </button>
-                  {isPlayingAudio && (
-                    <button onClick={handleStopAudio} className="text-white hover:text-rose-400 transition-colors">
-                      <FaStop size={16} />
-                    </button>
-                  )}
-                </div>
 
                 <button onClick={() => handleDownload(readingBook)} className="p-3 sm:p-4 bg-white/5 text-white hover:bg-white/10 rounded-xl transition-all" title="Download">
                   <FaCloudDownloadAlt size={20} />
@@ -674,6 +754,83 @@ export default function Books() {
                   />
                 </motion.div>
               )}
+            </div>
+            
+            {/* NEW SPOTIFY-STYLE FLOATING AUDIO PLAYER */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:w-[600px] shadow-2xl rounded-2xl bg-slate-900/80 backdrop-blur-2xl border border-white/10 overflow-hidden">
+              {/* Progress Bar Top Edge */}
+              <div className="w-full h-1 bg-slate-800">
+                 <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: paragraphs.length ? `${((currentParagraphIndex + 1) / paragraphs.length) * 100}%` : '0%' }}></div>
+              </div>
+              
+              <div className="px-6 py-4 flex flex-col gap-4">
+                 {/* Current Text Display (replaces fake equalizer) */}
+                 <div className="text-slate-300 text-sm font-medium italic line-clamp-2 h-10 flex items-center justify-center text-center">
+                    {isExtractingText ? <span className="animate-pulse">Loading Text Engine...</span> : paragraphs[currentParagraphIndex] ? `"${paragraphs[currentParagraphIndex]}"` : "Ready to Read."}
+                 </div>
+                 
+                 {/* Main Controls */}
+                 <div className="flex items-center justify-between">
+                    <div className="flex flex-col min-w-[100px]">
+                       <span className="text-white text-xs font-bold truncate max-w-[120px]">{readingBook.title}</span>
+                       <span className="text-slate-400 text-[10px]">Par {currentParagraphIndex + 1} of {paragraphs.length || '?'}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                       <button onClick={handlePrevParagraph} className="text-slate-300 hover:text-white transition-colors disabled:opacity-50" disabled={currentParagraphIndex === 0}>
+                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
+                       </button>
+                       
+                       <button onClick={handleToggleAudio} disabled={isExtractingText || isPdfLoading} className="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
+                         {isExtractingText ? <FaSpinner className="animate-spin" size={18} /> : isPlayingAudio ? <FaPause size={18} /> : <FaPlay size={18} className="ml-1" />}
+                       </button>
+                       
+                       <button onClick={handleNextParagraph} className="text-slate-300 hover:text-white transition-colors disabled:opacity-50" disabled={currentParagraphIndex >= paragraphs.length - 1}>
+                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 14.832A1 1 0 0013 14V8.798l5.445 3.63A1 1 0 0020 14V6a1 1 0 00-1.555-.832L13 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4A1 1 0 0011.555 14.832z"/><path d="M4.555 14.832A1 1 0 006 14V6a1 1 0 00-1.555-.832l-4 2.666a1 1 0 000 1.664l4 2.666A1 1 0 004.555 14.832z"/></svg>
+                       </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 min-w-[100px] justify-end">
+                       <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`text-slate-400 hover:text-white transition-colors ${isSettingsOpen ? 'text-indigo-400' : ''}`}>
+                         <FaCog size={18} />
+                       </button>
+                    </div>
+                 </div>
+              </div>
+              
+              {/* Settings Panel Expansion */}
+              <AnimatePresence>
+                 {isSettingsOpen && (
+                    <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="border-t border-white/10 px-6 py-4 space-y-4 bg-slate-900">
+                       <div className="flex flex-col gap-2">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reading Speed</span>
+                          <div className="flex items-center gap-2">
+                             {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                                <button key={speed} onClick={() => setPlaybackSpeed(speed)} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${playbackSpeed === speed ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>
+                                   {speed}x
+                                </button>
+                             ))}
+                          </div>
+                       </div>
+                       
+                       <div className="flex gap-4">
+                          <div className="flex-1 flex flex-col gap-2">
+                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Volume</span>
+                             <input type="range" min="0" max="1" step="0.1" value={audioVolume} onChange={(e) => setAudioVolume(parseFloat(e.target.value))} className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-full appearance-none mt-2" />
+                          </div>
+                          
+                          <div className="flex-1 flex flex-col gap-2">
+                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Language</span>
+                             <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded-lg p-1.5 outline-none focus:border-indigo-500">
+                                <option value="en">🇬🇧 English</option>
+                                <option value="kn">🇮🇳 Kannada</option>
+                                <option value="hi">🇮🇳 Hindi</option>
+                             </select>
+                          </div>
+                       </div>
+                    </motion.div>
+                 )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
