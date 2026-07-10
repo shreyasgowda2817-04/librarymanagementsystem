@@ -5,7 +5,7 @@ import {
   FaBookOpen, FaSearch, FaFilter, FaDownload, FaEdit, FaTimes,
   FaSave, FaSpinner, FaStar, FaThLarge, FaList, FaBook,
   FaHeart, FaRegHeart, FaPlus, FaMagic, FaRobot, FaBolt, FaLayerGroup, FaRegLightbulb,
-  FaEye, FaCloudDownloadAlt, FaTimesCircle,
+  FaEye, FaCloudDownloadAlt, FaTimesCircle, FaCog,
   FaFilePdf, FaImage, FaTrash, FaPlay, FaPause, FaStop, FaTachometerAlt, FaCheck
 } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
@@ -32,6 +32,10 @@ export default function Books() {
   // Audiobook State
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isAdvancedAudio, setIsAdvancedAudio] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(1);
+  const [audioPitch, setAudioPitch] = useState(1);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [availableVoices, setAvailableVoices] = useState([]);
   const [extractedPdfText, setExtractedPdfText] = useState("");
@@ -201,9 +205,17 @@ export default function Books() {
 
         const utterance = new SpeechSynthesisUtterance(textToRead);
         utterance.rate = playbackSpeed;
+        utterance.pitch = audioPitch;
+        utterance.volume = audioVolume;
         
-        // Find matching voice for selected language
-        const voice = availableVoices.find(v => v.lang.replace('_', '-').split('-')[0].toLowerCase() === selectedLanguage);
+        // Find matching voice for selected language or URI
+        let voice = null;
+        if (selectedVoiceURI) {
+          voice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+        }
+        if (!voice) {
+          voice = availableVoices.find(v => v.lang.replace('_', '-').split('-')[0].toLowerCase() === selectedLanguage);
+        }
         if (voice) {
           utterance.voice = voice;
         }
@@ -584,58 +596,8 @@ export default function Books() {
                 </div>
               </div>
 
-              {/* Compact Audio Controls (Center) */}
-              <div className="flex-1 flex justify-center">
-                <div className="flex items-center gap-3 sm:gap-4 bg-slate-950/50 px-4 py-2 rounded-full border border-slate-800 shadow-inner">
-                  <button onClick={() => setPlaybackSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 1)} className="text-[10px] font-black text-slate-400 hover:text-white transition-colors w-6 sm:w-8">
-                    {playbackSpeed}x
-                  </button>
-                  
-                  <button onClick={handleToggleAudio} disabled={isExtractingText || isPdfLoading} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 disabled:text-indigo-500 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:cursor-not-allowed">
-                    {isExtractingText ? <FaSpinner className="animate-spin" size={14} /> : isPlayingAudio ? <FaPause size={14} /> : <FaPlay size={14} className="ml-0.5" />}
-                  </button>
-                  
-                  <button onClick={handleStopAudio} className="text-slate-400 hover:text-rose-500 transition-colors w-6 sm:w-8 flex justify-center">
-                    <FaStop size={14} />
-                  </button>
-
-                  <div className="h-5 sm:h-6 w-px bg-slate-800 mx-1 sm:mx-2"></div>
-
-                  {/* Voice Selection */}
-                  <select 
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="bg-transparent text-[9px] sm:text-[10px] text-slate-300 font-bold outline-none max-w-[80px] sm:max-w-[140px] cursor-pointer"
-                  >
-                    {[
-                      { code: 'en', name: 'English' },
-                      { code: 'hi', name: 'Hindi' },
-                      { code: 'kn', name: 'Kannada' },
-                      { code: 'zh', name: 'Chinese' },
-                      { code: 'ja', name: 'Japanese' },
-                      { code: 'es', name: 'Spanish' },
-                      { code: 'fr', name: 'French' },
-                      { code: 'de', name: 'German' },
-                      { code: 'ar', name: 'Arabic' },
-                      { code: 'ru', name: 'Russian' }
-                    ].map(lang => (
-                      <option key={lang.code} value={lang.code} className="bg-slate-900">{lang.name}</option>
-                    ))}
-                  </select>
-
-                  {/* Tiny Equalizer */}
-                  <div className="hidden sm:flex items-end gap-[2px] h-4 ml-2">
-                    {[...Array(6)].map((_, i) => (
-                      <motion.div 
-                        key={i}
-                        className="w-[3px] bg-indigo-500 rounded-full"
-                        animate={{ height: isPlayingAudio ? [4, 12, 4, 16, 8][Math.floor(Math.random()*5)] : 2 }}
-                        transition={{ repeat: Infinity, duration: 0.3 + (i * 0.1), ease: "linear" }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+              {/* Center spacer */}
+              <div className="flex-1 flex justify-center"></div>
 
               <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
                 <button onClick={() => handleDownload(readingBook)} className="p-3 sm:p-4 bg-white/5 text-white hover:bg-white/10 rounded-xl transition-all" title="Download">
@@ -667,6 +629,116 @@ export default function Books() {
                   />
                 </motion.div>
               )}
+            </div>
+
+            {/* FLOATING AUDIO PLAYER (Simple & Advanced Modes) */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:w-auto min-w-[320px]">
+              <motion.div 
+                layout
+                className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden flex flex-col"
+                animate={{ width: isAdvancedAudio ? 400 : 'auto' }}
+              >
+                {/* Simple Mode / Top Bar */}
+                <div className="flex items-center gap-4 px-6 py-4">
+                  {/* Play/Pause */}
+                  <button onClick={handleToggleAudio} disabled={isExtractingText || isPdfLoading} className="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 flex-shrink-0">
+                    {isExtractingText ? <FaSpinner className="animate-spin" size={18} /> : isPlayingAudio ? <FaPause size={18} /> : <FaPlay size={18} className="ml-1" />}
+                  </button>
+
+                  {/* Track Info */}
+                  <div className="flex flex-col justify-center min-w-[120px]">
+                    <span className="text-white text-xs font-bold uppercase tracking-wider line-clamp-1">{readingBook.title}</span>
+                    <span className="text-slate-400 text-[10px] font-medium">Audiobook Engine</span>
+                  </div>
+
+                  {/* Tiny Equalizer */}
+                  <div className="flex items-end gap-[2px] h-4 mx-2">
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div 
+                        key={i}
+                        className="w-[3px] bg-indigo-500 rounded-full"
+                        animate={{ height: isPlayingAudio ? [4, 16, 6, 12, 4][Math.floor(Math.random()*5)] : 2 }}
+                        transition={{ repeat: Infinity, duration: 0.3 + (i * 0.1), ease: "linear" }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Settings Toggle */}
+                  <button 
+                    onClick={() => setIsAdvancedAudio(!isAdvancedAudio)}
+                    className={`ml-auto w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isAdvancedAudio ? 'bg-indigo-500/20 text-indigo-400' : 'bg-transparent text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  >
+                    <FaCog size={16} className={isAdvancedAudio ? "animate-spin-slow" : ""} />
+                  </button>
+                  
+                  {isPlayingAudio && (
+                    <button onClick={handleStopAudio} className="w-10 h-10 rounded-full bg-transparent text-slate-400 hover:bg-rose-500/20 hover:text-rose-500 flex items-center justify-center transition-colors">
+                      <FaStop size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Advanced Mode Expansion */}
+                <AnimatePresence>
+                  {isAdvancedAudio && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="px-6 pb-6 border-t border-slate-800 pt-4 space-y-4"
+                    >
+                      {/* Controls Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Speed */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <span>Speed</span>
+                            <span className="text-indigo-400">{playbackSpeed}x</span>
+                          </div>
+                          <input type="range" min="0.5" max="2" step="0.1" value={playbackSpeed} onChange={e => setPlaybackSpeed(parseFloat(e.target.value))} className="w-full accent-indigo-500 h-1 bg-slate-800 rounded-full appearance-none outline-none" />
+                        </div>
+
+                        {/* Pitch */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <span>Pitch</span>
+                            <span className="text-indigo-400">{audioPitch}</span>
+                          </div>
+                          <input type="range" min="0" max="2" step="0.1" value={audioPitch} onChange={e => setAudioPitch(parseFloat(e.target.value))} className="w-full accent-indigo-500 h-1 bg-slate-800 rounded-full appearance-none outline-none" />
+                        </div>
+
+                        {/* Volume */}
+                        <div className="space-y-2 col-span-2">
+                          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <span>Volume</span>
+                            <span className="text-indigo-400">{Math.round(audioVolume * 100)}%</span>
+                          </div>
+                          <input type="range" min="0" max="1" step="0.05" value={audioVolume} onChange={e => setAudioVolume(parseFloat(e.target.value))} className="w-full accent-indigo-500 h-1 bg-slate-800 rounded-full appearance-none outline-none" />
+                        </div>
+
+                        {/* Exact Voice Selection */}
+                        <div className="space-y-2 col-span-2">
+                          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <span>Voice Engine</span>
+                          </div>
+                          <select 
+                            value={selectedVoiceURI}
+                            onChange={e => setSelectedVoiceURI(e.target.value)}
+                            className="w-full bg-slate-950 text-xs text-slate-300 border border-slate-800 rounded-lg p-2 outline-none focus:border-indigo-500"
+                          >
+                            <option value="">Default OS Voice</option>
+                            {availableVoices.map(v => (
+                              <option key={v.voiceURI} value={v.voiceURI}>
+                                {v.name} ({v.lang})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
           </motion.div>
         )}
