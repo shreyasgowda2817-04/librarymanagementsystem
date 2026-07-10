@@ -33,28 +33,37 @@ export const broadcastMessage = async (req, res, next) => {
 
     // Process emails in the background using an async IIFE
     (async () => {
-      const bccList = users.map(u => u.email).join(',');
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
-            <h2 style="color: white; margin: 0;">Library Announcement</h2>
-          </div>
-          <div style="padding: 30px; color: #1e293b; line-height: 1.6;">
-            <p>Hello <strong>Library Member</strong>,</p>
-            <p>${message.replace(/\n/g, "<br>")}</p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
-              Sent by Library Administration
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+            <div style="background-color: #4f46e5; padding: 20px; text-align: center;">
+              <h2 style="color: white; margin: 0;">Library Announcement</h2>
+            </div>
+            <div style="padding: 30px; color: #1e293b; line-height: 1.6;">
+              <p>Hello <strong>${user.name}</strong>,</p>
+              <p>${message.replace(/\n/g, "<br>")}</p>
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b;">
+                Sent by Library Administration
+              </div>
             </div>
           </div>
-        </div>
-      `;
-
-      try {
-        await sendEmail(null, subject, html, bccList);
-        console.log("✅ Background bulk BCC broadcast completed for", users.length, "users.");
-      } catch (e) {
-        throw e;
+        `;
+        
+        try {
+          await sendEmail(user.email, subject, html);
+          successCount++;
+        } catch (e) {
+          failCount++;
+        }
+        
+        // Add a 1.5 second delay between every email to prevent Google rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
+      console.log(`✅ Background broadcast completed. Success: ${successCount}, Failed: ${failCount}`);
     })().catch(err => {
       console.error("Background Broadcast Error:", err);
     });
