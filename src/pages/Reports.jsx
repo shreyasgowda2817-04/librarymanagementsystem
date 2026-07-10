@@ -279,9 +279,11 @@ export default function Reports() {
   const exportToCSV = (data, filename) => {
     if (!data || data.length === 0) return toast.error("No data to export");
     logActivity("CSV Export", `Exported ${data.length} records to ${filename}`);
-    const headers = Object.keys(data[0]).join(",");
+    const keys = Object.keys(data[0]);
+    const headers = keys.join(",");
     const rows = data.map(item => {
-      return Object.values(item).map(val => {
+      return keys.map(key => {
+        const val = item[key] !== undefined ? item[key] : "";
         let str = String(val).replace(/"/g, '""');
         if (typeof val === 'object' && val !== null) {
           str = val.title || val.name || JSON.stringify(val);

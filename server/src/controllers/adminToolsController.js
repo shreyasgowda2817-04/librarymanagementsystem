@@ -121,14 +121,21 @@ export const importBooks = async (req, res, next) => {
       return res.status(400).json({ message: "No book data provided." });
     }
 
-    const newBooks = await Book.insertMany(books.map(b => ({
-      title: b.title || b.Title || "Untitled",
-      author: b.author || b.Author || "Unknown",
-      category: b.category || b.Category || "Uncategorized",
-      barcode: b.barcode || b.ISBN || "",
-      stock: b.stock || b.Quantity || 1,
-      replacementCost: b.cost || b.Cost || 500
-    })));
+    const newBooks = await Book.insertMany(books.map(b => {
+      const parsedStock = parseInt(b.stock || b.Quantity);
+      const validStock = (!isNaN(parsedStock) && parsedStock > 0) ? parsedStock : 1;
+      const parsedCost = parseFloat(b.cost || b.Cost);
+      const validCost = (!isNaN(parsedCost) && parsedCost > 0) ? parsedCost : 500;
+
+      return {
+        title: b.title || b.Title || "Untitled",
+        author: b.author || b.Author || "Unknown",
+        category: b.category || b.Category || "Uncategorized",
+        barcode: b.barcode || b.ISBN || "",
+        stock: validStock,
+        replacementCost: validCost
+      };
+    }));
 
     await createAuditEntry(req.user, "BULK_IMPORT", "Library Tools", `Imported ${newBooks.length} books in bulk.`);
     res.status(201).json({ message: `Successfully imported ${newBooks.length} books.`, count: newBooks.length });
