@@ -88,13 +88,13 @@ export default function Footer({ isAdmin }) {
             </div>
             <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 pt-0.5">
               {['Privacy Policy', 'Terms of Service', 'Licensing'].map((text) => (
-                <a 
+                <Link 
                   key={text} 
-                  href={`${text.toLowerCase().split(' ')[0]}.html`} 
+                  to={`/${text.toLowerCase().split(' ')[0]}`} 
                   className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-all whitespace-nowrap min-h-0 py-0.5"
                 >
                   {text}
-                </a>
+                </Link>
               ))}
             </div>
           </div>
