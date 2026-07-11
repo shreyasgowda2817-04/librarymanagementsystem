@@ -1,4 +1,20 @@
 import User from "../models/user.js";
+import mongoose from "mongoose";
+import path from "path";
+
+const uploadToGridFS = async (buffer, filename, mimetype) => {
+  return new Promise((resolve, reject) => {
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: "media"
+    });
+    const uploadStream = bucket.openUploadStream(filename, {
+      contentType: mimetype
+    });
+    uploadStream.end(buffer);
+    uploadStream.on('finish', () => resolve(uploadStream.id));
+    uploadStream.on('error', reject);
+  });
+};
 import jwt from "jsonwebtoken";
 import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 import crypto from "crypto";
@@ -320,7 +336,9 @@ export const updateProfile = async (req, res, next) => {
 
     if (req.file) {
       const backendUrl = process.env.BACKEND_URL || "http://localhost:5001";
-      updateOps.$set.profilePhoto = `${backendUrl}/uploads/${req.file.filename}`;
+      const filename = `profile-${user._id}-${Date.now()}${path.extname(req.file.originalname || '')}`;
+      const gridFsId = await uploadToGridFS(req.file.buffer, filename, req.file.mimetype);
+      updateOps.$set.profilePhoto = `${backendUrl}/api/books/media/${gridFsId}`;
     }
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updateOps, { new: true });
