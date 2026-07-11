@@ -106,6 +106,16 @@ export default function Dashboard() {
   );
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [userData, setUserData] = useState(user);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const updatedUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (updatedUser) setUserData(updatedUser);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const [favorites, setFavorites] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [bookRequests, setBookRequests] = useState([]);

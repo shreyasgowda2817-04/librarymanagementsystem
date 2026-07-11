@@ -32,7 +32,7 @@ export default function Layout({ children }) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { featureFlags } = useFeature();
   
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const isAdmin = user?.role === "admin";
 
   const fetchNotifications = async () => {
@@ -118,6 +118,11 @@ export default function Layout({ children }) {
     window.addEventListener('keydown', handleKeyDown);
     fetchNotifications();
 
+    const handleStorageChange = () => {
+      setUser(JSON.parse(localStorage.getItem("user") || "null"));
+    };
+    window.addEventListener("storage", handleStorageChange);
+
     // Socket.io Connection
     const socket = io(API_URL);
     socket.on("connect", () => {
@@ -131,6 +136,7 @@ export default function Layout({ children }) {
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("storage", handleStorageChange);
       socket.disconnect();
     };
   }, [user?.token]);
@@ -381,8 +387,12 @@ export default function Layout({ children }) {
               onClick={() => navigate("/profile")}
               className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 p-[1px] shadow-md hover:scale-105 active:scale-95 transition-all"
             >
-              <div className="w-full h-full bg-white dark:bg-[#020617] rounded-full flex items-center justify-center text-indigo-600 dark:text-white font-black text-[10px]">
-                {user?.name?.charAt(0)}
+              <div className="w-full h-full bg-white dark:bg-[#020617] rounded-full overflow-hidden flex items-center justify-center text-indigo-600 dark:text-white font-black text-sm">
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0)
+                )}
               </div>
             </button>
           </div>
