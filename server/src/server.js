@@ -86,17 +86,19 @@ app.use(maintenanceMode);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 const mongoUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/libraryDB";
-console.log("Attempting to connect to MongoDB...");
 
-mongoose.connect(mongoUri)
-  .then(() => console.log(`✅ MongoDB Connected Successfully to: ${mongoUri.split('/').pop()}`))
-  .catch(err => {
-    console.error("❌ MongoDB Connection Error:");
-    console.error(err.message);
-    if (err.message.includes("ECONNREFUSED")) {
-      console.error("👉 Tip: Make sure your MongoDB server is running (e.g., run 'brew services start mongodb-community')");
-    }
-  });
+if (process.env.NODE_ENV !== 'test') {
+  console.log("Attempting to connect to MongoDB...");
+  mongoose.connect(mongoUri)
+    .then(() => console.log(`✅ MongoDB Connected Successfully to: ${mongoUri.split('/').pop()}`))
+    .catch(err => {
+      console.error("❌ MongoDB Connection Error:");
+      console.error(err.message);
+      if (err.message.includes("ECONNREFUSED")) {
+        console.error("👉 Tip: Make sure your MongoDB server is running (e.g., run 'brew services start mongodb-community')");
+      }
+    });
+}
 
 app.get("/", (req, res) => {
   res.send("✅ Library Backend Running Successfully!");
@@ -156,6 +158,10 @@ initSocket(server);
 // Initialize Automated Background Jobs (Cron)
 initScheduler();
 
-server.listen(PORT, "0.0.0.0", () => {
-  logger.info(`✅ Backend running on http://127.0.0.1:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, "0.0.0.0", () => {
+    logger.info(`✅ Backend running on http://127.0.0.1:${PORT}`);
+  });
+}
+
+export { app };
