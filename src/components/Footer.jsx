@@ -87,15 +87,15 @@ export default function Footer({ isAdmin }) {
               © {new Date().getFullYear()} LMS Pro
             </div>
             <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 pt-0.5">
-              {['Privacy Policy', 'Terms of Service', 'Licensing'].map((text) => (
-                <Link 
-                  key={text} 
-                  to={`/${text.toLowerCase().split(' ')[0]}`} 
-                  className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-all whitespace-nowrap min-h-0 py-0.5"
-                >
-                  {text}
-                </Link>
-              ))}
+              <a href="/privacy.html" className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-all whitespace-nowrap min-h-0 py-0.5">
+                Privacy Policy
+              </a>
+              <a href="/terms.html" className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-all whitespace-nowrap min-h-0 py-0.5">
+                Terms of Service
+              </a>
+              <a href="/license.html" className="text-[11px] font-bold text-slate-500 hover:text-indigo-600 transition-all whitespace-nowrap min-h-0 py-0.5">
+                Licensing
+              </a>
             </div>
           </div>
 

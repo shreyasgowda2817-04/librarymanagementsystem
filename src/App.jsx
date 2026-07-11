@@ -12,7 +12,6 @@ import {
 import { Suspense, lazy, useEffect } from "react";
 
 import LandingPage from "./pages/LandingPage";
-import LegalPage from "./pages/LegalPage";
 
 // Primary Pages (Lazy Loaded for Performance)
 const Login = lazy(() => import("./pages/Login"));
@@ -128,11 +127,6 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        
-        {/* Legal Routes */}
-        <Route path="/privacy" element={<LegalPage type="privacy" />} />
-        <Route path="/terms" element={<LegalPage type="terms" />} />
-        <Route path="/licensing" element={<LegalPage type="licensing" />} />
 
         {/* Protected routes */}
         <Route
