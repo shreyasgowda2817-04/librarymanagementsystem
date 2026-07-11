@@ -348,7 +348,7 @@ export const updateProfile = async (req, res, next) => {
       securitySettings: updatedUser.securitySettings,
       readingGoal: updatedUser.readingGoal || 0,
       aiQueriesCount: updatedUser.aiQueriesCount || 0,
-      token: generateToken(updatedUser._id)
+      token: generateAccessToken(updatedUser._id)
     });
 
   } catch (err) {
