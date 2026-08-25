@@ -16,7 +16,7 @@ export default function About() {
           className="text-center mb-16"
         >
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
-            About <span className="text-blue-600">[ENTER_PROJECT_NAME_HERE]</span>
+            About <span className="text-blue-600">Library Management System</span>
           </h1>
           <p className="mt-4 text-xl text-gray-500 max-w-2xl mx-auto">
             A modern, comprehensive software solution for managing library resources, users, and digital assets.
@@ -38,11 +38,11 @@ export default function About() {
             <dl className="sm:divide-y sm:divide-gray-200">
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Project Name</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-semibold">[ENTER_PROJECT_NAME_HERE]</dd>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-semibold">Library Management System</dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Organization / College</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">[ENTER_COLLEGE_ORGANIZATION_HERE]</dd>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Dr NSAM First Grade College</dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Technologies Used</dt>
@@ -57,7 +57,7 @@ export default function About() {
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Source Code</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <a href="[ENTER_GITHUB_URL_HERE]" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
+                  <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
                     <Github className="h-4 w-4 mr-1" /> GitHub Repository
                   </a>
                 </dd>
@@ -65,8 +65,8 @@ export default function About() {
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Live Application</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <a href="[ENTER_LIVE_WEBSITE_URL_HERE]" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
-                    <ExternalLink className="h-4 w-4 mr-1" /> [ENTER_LIVE_WEBSITE_URL_HERE]
+                  <a href="https://librarymanagementsystem-psi.vercel.app" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
+                    <ExternalLink className="h-4 w-4 mr-1" /> https://librarymanagementsystem-psi.vercel.app
                   </a>
                 </dd>
               </div>
@@ -91,15 +91,15 @@ export default function About() {
               <div className="h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mb-4 shadow-inner">
                 <Code className="h-12 w-12" />
               </div>
-              <h4 className="text-xl font-bold text-gray-900 text-center">[ENTER_YOUR_NAME_HERE]</h4>
+              <h4 className="text-xl font-bold text-gray-900 text-center">Shreyas Gowda HG</h4>
               <p className="text-sm text-gray-500 text-center mb-4">Full Stack Developer & Creator</p>
               
               <div className="flex space-x-3">
-                <a href="[ENTER_GITHUB_URL_HERE]" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
+                <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
                   <span className="sr-only">GitHub</span>
                   <Github className="h-6 w-6" />
                 </a>
-                <a href="[ENTER_LINKEDIN_URL_HERE]" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-700 transition-colors">
+                <a href="https://www.linkedin.com/in/shreyas-gowda-h-g-486316386" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-700 transition-colors">
                   <span className="sr-only">LinkedIn</span>
                   <Linkedin className="h-6 w-6" />
                 </a>
@@ -109,7 +109,7 @@ export default function About() {
             <div className="w-full sm:w-2/3">
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Biography</h4>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                [ENTER_SHORT_BIOGRAPHY_HERE - e.g., I am a passionate software developer studying at XYZ College. I created this Library Management System to solve real-world administrative challenges and provide a seamless digital experience for students.]
+                I am a passionate software developer and creator of this Library Management System. I am currently associated with Dr NSAM First Grade College, where I recognized the need to solve real-world administrative challenges. I built this comprehensive digital solution to provide a seamless, modern library experience for students and administrators.
               </p>
               
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Technical Skills</h4>

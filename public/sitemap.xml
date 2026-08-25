@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>[ENTER_LIVE_WEBSITE_URL_HERE]/</loc>
+    <loc>https://librarymanagementsystem-psi.vercel.app/</loc>
     <lastmod>2024-01-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>[ENTER_LIVE_WEBSITE_URL_HERE]/about</loc>
+    <loc>https://librarymanagementsystem-psi.vercel.app/about</loc>
     <lastmod>2024-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>[ENTER_LIVE_WEBSITE_URL_HERE]/login</loc>
+    <loc>https://librarymanagementsystem-psi.vercel.app/login</loc>
     <lastmod>2024-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>[ENTER_LIVE_WEBSITE_URL_HERE]/register</loc>
+    <loc>https://librarymanagementsystem-psi.vercel.app/register</loc>
     <lastmod>2024-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
