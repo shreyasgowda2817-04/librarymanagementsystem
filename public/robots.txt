@@ -1,2 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard
+
+Sitemap: [ENTER_LIVE_WEBSITE_URL_HERE]/sitemap.xml

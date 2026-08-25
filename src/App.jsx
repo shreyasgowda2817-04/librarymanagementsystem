@@ -42,6 +42,7 @@ const ModuleQuestions = lazy(() => import("./pages/modulequstion"));
 const Transactions = lazy(() => import("./pages/Transactions"));
 const ResearchWorkspace = lazy(() => import("./pages/ResearchWorkspace"));
 const AIExplore = lazy(() => import("./pages/AIExplore"));
+const About = lazy(() => import("./pages/About"));
 
 import Footer from "./components/Footer";
 import FocusMode from "./components/FocusMode";
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/about" element={<About />} />
 
         {/* Protected routes */}
         <Route
