@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/lms-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4f46e5">
     <meta name="description" content="A premium online Library Management System. Track books, manage memberships, and explore a digital library designed for modern students and administrators.">
     <meta name="keywords" content="library management system, online library, digital library software, book tracking, student reading portal">
     <meta name="author" content="Shreyas Gowda HG">
@@ -51,12 +52,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js');
-        });
-      }
-    </script>
+
   </body>
 </html>
