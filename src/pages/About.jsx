@@ -57,7 +57,7 @@ export default function About() {
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Source Code</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
+                  <a href="https://github.com/shreyasgowda2817-04/librarymanagementsystem.git" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 flex items-center">
                     <Github className="h-4 w-4 mr-1" /> GitHub Repository
                   </a>
                 </dd>
@@ -92,7 +92,7 @@ export default function About() {
                 <Code className="h-12 w-12" />
               </div>
               <h4 className="text-xl font-bold text-gray-900 text-center">Shreyas Gowda HG</h4>
-              <p className="text-sm text-gray-500 text-center mb-4">Full Stack Developer & Creator</p>
+              <p className="text-sm text-gray-500 text-center mb-4">Shreyas Gowda HG is the founder and developer of the Library Management System & Creator</p>
               
               <div className="flex space-x-3">
                 <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
