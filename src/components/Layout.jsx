@@ -15,6 +15,7 @@ import ChatSupport from "./ChatSupport";
 import Footer from "./Footer";
 import CommandPalette from "./CommandPalette";
 import { useFeature } from "../context/FeatureContext";
+import InstallPrompt from "./InstallPrompt";
 
 
 export default function Layout({ children }) {
@@ -570,6 +571,7 @@ export default function Layout({ children }) {
           </motion.div>
         )}
       </AnimatePresence>
+      <InstallPrompt />
     </div>
   );
 }
