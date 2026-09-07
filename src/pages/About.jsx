@@ -1,228 +1,199 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import { Github, Linkedin, ExternalLink, ArrowRight, ArrowLeft, Zap, Shield, Users, Building } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Github, Linkedin, ExternalLink, Zap, Shield, Code, Globe, Server, BookOpen } from "lucide-react";
+import Layout from "../components/Layout";
 
 export default function About() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navItems = ["Impact", "Leadership", "New Releases", "Newsroom", "Investors", "Resources"];
-
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div className="bg-white min-h-screen text-slate-900 font-sans selection:bg-red-600 selection:text-white overflow-x-hidden">
-      
-      {/* Premium Corporate Navbar - Crisp White */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-lg shadow-sm py-4' : 'bg-white py-6'}`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center gap-12">
-            <Link to="/" className="text-red-600 font-black tracking-tighter text-2xl md:text-3xl hover:opacity-80 transition-opacity">
-              LIBRARY
-            </Link>
-            <div className="hidden lg:flex gap-8">
-              {navItems.map(item => (
-                <button 
-                  key={item} 
-                  onClick={() => scrollTo(item.toLowerCase().replace(' ', '-'))} 
-                  className="text-sm font-semibold text-slate-600 hover:text-red-600 transition-colors"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Link to="/" className="hidden md:flex items-center text-sm font-semibold text-slate-700 hover:text-red-600 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
-          </Link>
-        </div>
-      </nav>
-
-      {/* Cinematic Hero - Dark Contrast */}
-      <section className="relative pt-40 pb-24 lg:pt-56 lg:pb-40 bg-slate-950 overflow-hidden">
-        {/* Abstract background elements */}
-        <div className="absolute top-0 right-0 -mr-40 -mt-40 w-96 h-96 rounded-full bg-red-600/20 blur-3xl opacity-50" />
-        <div className="absolute bottom-0 left-0 -ml-40 -mb-40 w-96 h-96 rounded-full bg-blue-600/20 blur-3xl opacity-50" />
+    <Layout>
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-white mb-8"
-          >
-            A new era for <br className="hidden md:block"/> educational resources.
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed"
-          >
-            Discover the story, the impact, and the technology behind the world's most seamless Library Management System.
-          </motion.p>
-        </div>
-      </section>
-
-      {/* Impact Section - Clean White */}
-      <section id="impact" className="py-24 lg:py-32 max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="max-w-3xl mb-20">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-slate-900">Global Impact</h2>
-          <p className="text-xl text-slate-600 leading-relaxed">
-            By digitizing traditional library workflows, we've created an ecosystem that empowers students to learn faster and administrators to manage smarter.
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-12 lg:gap-16">
-           <div className="border-t-2 border-slate-100 pt-8">
-             <Zap className="w-8 h-8 text-red-600 mb-6" />
-             <h3 className="text-5xl lg:text-6xl font-light text-slate-900 mb-4 tracking-tighter">80%</h3>
-             <p className="text-xl font-bold mb-2 text-slate-900">Faster Checkouts</p>
-             <p className="text-slate-600 leading-relaxed">Streamlined digital interfaces completely eliminate long queues at the circulation desk.</p>
-           </div>
-           <div className="border-t-2 border-slate-100 pt-8">
-             <Shield className="w-8 h-8 text-red-600 mb-6" />
-             <h3 className="text-5xl lg:text-6xl font-light text-slate-900 mb-4 tracking-tighter">100%</h3>
-             <p className="text-xl font-bold mb-2 text-slate-900">Offline Reliability</p>
-             <p className="text-slate-600 leading-relaxed">Progressive Web App technology ensures administrators can manage resources even during outages.</p>
-           </div>
-           <div className="border-t-2 border-slate-100 pt-8">
-             <Users className="w-8 h-8 text-red-600 mb-6" />
-             <h3 className="text-5xl lg:text-6xl font-light text-slate-900 mb-4 tracking-tighter">24/7</h3>
-             <p className="text-xl font-bold mb-2 text-slate-900">Automated Support</p>
-             <p className="text-slate-600 leading-relaxed">Smart algorithms handle overdue penalties, emails, and system health checks silently.</p>
-           </div>
-        </div>
-      </section>
-
-      {/* Leadership Section - Light Gray */}
-      <section id="leadership" className="py-24 lg:py-32 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-16 text-slate-900">Leadership</h2>
-          <div className="bg-white rounded-3xl p-8 lg:p-16 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col lg:flex-row gap-16 items-center">
-            <div className="w-full lg:w-1/3">
-              <div className="aspect-square bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-8 text-center border border-slate-100">
-                <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 border border-red-100">
-                  <span className="text-3xl font-bold text-red-600">SG</span>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900">Shreyas Gowda HG</h3>
-                <p className="text-red-600 font-semibold mt-2 tracking-wide text-sm uppercase">Founder & Developer</p>
-                <div className="flex gap-4 mt-8">
-                  <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="p-3 bg-white rounded-full shadow-sm border border-slate-100 hover:border-slate-300 hover:text-red-600 transition-all"><Github className="w-5 h-5" /></a>
-                  <a href="https://www.linkedin.com/in/shreyas-gowda-h-g-486316386" target="_blank" rel="noopener noreferrer" className="p-3 bg-white rounded-full shadow-sm border border-slate-100 hover:border-slate-300 hover:text-red-600 transition-all"><Linkedin className="w-5 h-5" /></a>
-                </div>
-              </div>
-            </div>
-            <div className="w-full lg:w-2/3">
-              <h3 className="text-3xl md:text-4xl font-bold mb-8 text-slate-900 leading-tight">Building the future of educational infrastructure.</h3>
-              <p className="text-xl text-slate-600 leading-relaxed mb-6 font-light">
-                <strong className="font-semibold text-slate-900">Shreyas Gowda HG</strong> is the sole founder and developer of the Library Management System. 
-                Currently associated with Dr NSAM First Grade College, Shreyas engineered this platform from the ground up to solve real-world administrative challenges.
-              </p>
-              <p className="text-xl text-slate-600 leading-relaxed font-light">
-                By combining cutting-edge web technologies—like React, Node.js, and Progressive Web Apps—with a relentless focus on user experience, the system pushes the boundaries of what educational software can be.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* New Releases & Newsroom */}
-      <section className="py-24 lg:py-32 max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-20">
-          <div id="new-releases">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12 text-slate-900">New Releases</h2>
-            <div className="space-y-12">
-              <div className="relative pl-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-red-600">
-                <p className="text-sm text-red-600 font-bold tracking-widest uppercase mb-3">v2.0 Framework Update</p>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900">Enterprise SEO & PWA</h3>
-                <p className="text-slate-600 text-lg leading-relaxed">Integrated advanced Schema.org JSON-LD graph data for deep search engine optimization. Activated full Progressive Web App installation capabilities for mobile and desktop.</p>
-              </div>
-              <div className="relative pl-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-slate-200">
-                <p className="text-sm text-slate-500 font-bold tracking-widest uppercase mb-3">v1.5 Core Update</p>
-                <h3 className="text-2xl font-bold mb-3 text-slate-900">Automated Email System</h3>
-                <p className="text-slate-600 text-lg leading-relaxed">Deployed robust Nodemailer integration with Resend fallback for zero-downtime transactional emails and OTP verifications.</p>
-              </div>
-            </div>
-          </div>
+        {/* Dashboard Native Hero Banner */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-indigo-600 via-blue-700 to-indigo-800 rounded-3xl p-8 sm:p-12 text-white shadow-lg relative overflow-hidden"
+        >
+          {/* Abstract subtle background circles */}
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
           
-          <div id="newsroom">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-12 text-slate-900">Newsroom</h2>
-            <div className="space-y-6">
-              <a href="#" className="block p-8 rounded-2xl border border-slate-200 hover:border-red-200 hover:bg-red-50/50 transition-colors group">
-                <p className="text-sm text-slate-500 font-semibold mb-3">September 2026</p>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-snug">Vercel Production Deployment stabilized achieving 100% uptime.</h3>
-              </a>
-              <a href="#" className="block p-8 rounded-2xl border border-slate-200 hover:border-red-200 hover:bg-red-50/50 transition-colors group">
-                <p className="text-sm text-slate-500 font-semibold mb-3">August 2026</p>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-snug">Library Management System unveils new corporate product identity.</h3>
-              </a>
-              <a href="#" className="block p-8 rounded-2xl border border-slate-200 hover:border-red-200 hover:bg-red-50/50 transition-colors group">
-                <p className="text-sm text-slate-500 font-semibold mb-3">July 2026</p>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors leading-snug">Dr NSAM First Grade College initiates digital transformation pilot.</h3>
-              </a>
+          <div className="relative z-10 max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium mb-6">
+              <BookOpen className="w-4 h-4" /> v2.0 Enterprise Edition
             </div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
+              Library Management System
+            </h1>
+            <p className="text-indigo-100 text-lg sm:text-xl max-w-2xl leading-relaxed font-light">
+              A next-generation digital ecosystem designed to empower students, streamline administrative workflows, and modernize educational infrastructure.
+            </p>
           </div>
-        </div>
-      </section>
+        </motion.div>
 
-      {/* Investors & Resources - Dark Footer Area */}
-      <section className="bg-slate-950 text-white pt-24 lg:pt-32 pb-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-20 mb-24">
-          <div id="investors">
-            <h2 className="text-3xl font-bold mb-10">Investors & Partners</h2>
-            <div className="flex items-start gap-6">
-              <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
-                <Building className="w-8 h-8 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold mb-3">Dr NSAM First Grade College</h3>
-                <p className="text-slate-400 text-lg leading-relaxed">
-                  The primary organization, inspiration, and testing ground for this digital transformation initiative.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-6">
           
-          <div id="resources">
-            <h2 className="text-3xl font-bold mb-10">Resources</h2>
-            <div className="flex flex-col gap-4">
-              <a href="https://github.com/shreyasgowda2817-04/librarymanagementsystem.git" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all group">
-                <div className="flex items-center gap-5">
-                  <div className="p-3 bg-slate-800 rounded-lg group-hover:bg-slate-700 transition-colors">
-                    <Code className="w-6 h-6 text-slate-300" />
-                  </div>
-                  <span className="font-semibold text-lg">Source Code Repository</span>
+          {/* Left Column: Founder & Tech Stack */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* Founder Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-slate-100 to-indigo-50 dark:from-slate-800 dark:to-indigo-900/30" />
+              
+              <div className="relative z-10 w-24 h-24 bg-white dark:bg-slate-800 rounded-full border-4 border-white dark:border-slate-900 shadow-md flex items-center justify-center mt-8 mb-4">
+                <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">SG</span>
+              </div>
+              
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Shreyas Gowda HG</h2>
+              <p className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm uppercase tracking-wide mt-1">Founder & Developer</p>
+              
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-4 leading-relaxed px-4">
+                Associated with Dr NSAM First Grade College. Engineered to solve real-world administrative challenges.
+              </p>
+
+              <div className="flex gap-3 mt-6 w-full">
+                <a href="https://github.com/shreyasgowda2817-04" target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+                  <Github className="w-5 h-5" /> <span className="text-sm font-medium">GitHub</span>
+                </a>
+                <a href="https://www.linkedin.com/in/shreyas-gowda-h-g-486316386" target="_blank" rel="noopener noreferrer" className="flex-1 flex justify-center items-center gap-2 p-2.5 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 transition-colors">
+                  <Linkedin className="w-5 h-5" /> <span className="text-sm font-medium">LinkedIn</span>
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Tech Stack Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800"
+            >
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Code className="w-5 h-5 text-indigo-500" /> Technologies
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {['React.js 18', 'Node.js', 'Express', 'MongoDB', 'Tailwind CSS', 'Framer Motion', 'Vite PWA', 'Nodemailer'].map(tech => (
+                  <span key={tech} className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* Right Column: Stats, News, Resources */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* System Impact Grid */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="grid sm:grid-cols-2 gap-6"
+            >
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-4 text-emerald-600 dark:text-emerald-400">
+                  <Zap className="w-6 h-6" />
                 </div>
-                <ArrowRight className="text-slate-600 group-hover:text-red-500 transition-colors" />
-              </a>
-              <a href="https://librarymanagementsystem-psi.vercel.app" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-6 rounded-2xl bg-slate-900/50 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all group">
-                <div className="flex items-center gap-5">
-                  <div className="p-3 bg-slate-800 rounded-lg group-hover:bg-slate-700 transition-colors">
-                    <ExternalLink className="w-6 h-6 text-slate-300" />
-                  </div>
-                  <span className="font-semibold text-lg">Live Application</span>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">80% Faster</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Streamlined digital interfaces reduce the time required to checkout and return books.</p>
+              </div>
+              
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4 text-blue-600 dark:text-blue-400">
+                  <Shield className="w-6 h-6" />
                 </div>
-                <ArrowRight className="text-slate-600 group-hover:text-red-500 transition-colors" />
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">100% Offline</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">PWA capabilities ensure administrators can manage resources even during network outages.</p>
+              </div>
+            </motion.div>
+
+            {/* Recent Updates Timeline */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-800"
+            >
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Recent System Updates</h3>
+              
+              <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
+                
+                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-slate-900 bg-indigo-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">Enterprise SEO & PWA</h4>
+                      <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 px-2 py-0.5 rounded-full">v2.0</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Integrated advanced Schema.org JSON-LD graph data. Activated full Progressive Web App installation capabilities.</p>
+                  </div>
+                </div>
+
+                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white dark:border-slate-900 bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <Server className="w-4 h-4" />
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm">Automated Email System</h4>
+                      <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-full">v1.5</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Deployed robust Nodemailer integration with Resend fallback for transactional emails and OTP verifications.</p>
+                  </div>
+                </div>
+
+              </div>
+            </motion.div>
+
+            {/* Resources Grid */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="grid sm:grid-cols-2 gap-6"
+            >
+              <a href="https://github.com/shreyasgowda2817-04/librarymanagementsystem.git" target="_blank" rel="noopener noreferrer" className="flex items-center p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors group">
+                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-600 dark:text-slate-300 mr-4 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/20 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <Code className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Source Code</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">GitHub Repository</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
               </a>
-            </div>
+              
+              <a href="https://librarymanagementsystem-psi.vercel.app" target="_blank" rel="noopener noreferrer" className="flex items-center p-4 bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors group">
+                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-600 dark:text-slate-300 mr-4 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/20 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Live App</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Vercel Deployment</p>
+                </div>
+                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+              </a>
+            </motion.div>
+
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 border-t border-slate-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-red-600 font-black tracking-tighter text-2xl">LIBRARY</div>
-          <p className="text-slate-500 text-sm font-medium">© {new Date().getFullYear()} Library Management System. Founded by Shreyas Gowda HG.</p>
+        {/* Footer Watermark */}
+        <div className="text-center py-6 pb-12 text-slate-400 dark:text-slate-500 text-sm font-medium">
+          Library Management System © {new Date().getFullYear()} <br/> Founded by Shreyas Gowda HG.
         </div>
-      </section>
 
-    </div>
+      </div>
+    </Layout>
   );
 }
